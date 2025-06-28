@@ -2,8 +2,11 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Globalization;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using NAudio.Wave;
 using SharpAvi;
@@ -58,21 +61,30 @@ namespace GravadorDeTela
             }
         }
 
-        private void btnParar_Click(object sender, EventArgs e)
+        // CORREÇÃO: Método principal agora é 'async' para não travar a interface
+        private async void btnParar_Click(object sender, EventArgs e)
         {
+            // Desativa os botões imediatamente para evitar múltiplos cliques
+            btnIniciar.Enabled = false;
+            btnParar.Enabled = false;
+            lblStatus.Text = "Finalizando gravação...";
+            lblStatus.Visible = true;
+            progressBar1.Style = ProgressBarStyle.Marquee;
+            progressBar1.Visible = true;
+            this.Cursor = Cursors.WaitCursor;
+
             try
             {
                 if (_recorder != null && _recorder.IsRecording)
                     _recorder.Stop();
 
-                _recordingThread?.Join();
+                // CORREÇÃO: Espera a thread de gravação terminar em segundo plano, sem travar a UI
+                await Task.Run(() => _recordingThread?.Join());
 
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
 
                 progressBar1.Style = ProgressBarStyle.Continuous;
-                lblStatus.Text = "Finalizando...";
-                this.Cursor = Cursors.WaitCursor;
 
                 string videoPath = Path.Combine(_pastaDaGravacaoAtual, "gravacao_video.avi");
                 string audioPath = Path.Combine(_pastaDaGravacaoAtual, "gravacao_audio.wav");
@@ -85,14 +97,12 @@ namespace GravadorDeTela
 
                 if (_modoWhatsApp)
                 {
-                    lblStatus.Text = "Processando partes para MP4...";
-                    ProcessarParaWhatsApp(videoPath, audioPath);
+                    await ProcessarParaWhatsApp(videoPath, audioPath);
                 }
                 else
                 {
-                    lblStatus.Text = "Processando arquivo único para MP4...";
                     string outputPath = Path.Combine(_pastaDaGravacaoAtual, "gravacao_final.mp4");
-                    ProcessarParaArquivoUnico(videoPath, audioPath, outputPath);
+                    await ProcessarParaArquivoUnico(videoPath, audioPath, outputPath);
                 }
 
                 // Limpeza dos arquivos temporários
@@ -101,7 +111,7 @@ namespace GravadorDeTela
                 string tempFile = Path.Combine(_pastaDaGravacaoAtual, "temp_synced.mp4");
                 if (File.Exists(tempFile)) File.Delete(tempFile);
 
-                lblStatus.Text = "Gravação finalizada!";
+                lblStatus.Text = "Processamento concluído!";
                 MessageBox.Show("Gravação e processamento concluídos!", "Sucesso", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 Process.Start("explorer.exe", _pastaDaGravacaoAtual);
             }
@@ -113,7 +123,7 @@ namespace GravadorDeTela
             {
                 this.Cursor = Cursors.Default;
                 btnIniciar.Enabled = true;
-                btnParar.Enabled = false;
+                btnParar.Enabled = true;
                 chkModoWhatsApp.Enabled = true;
                 progressBar1.Visible = false;
                 lblStatus.Visible = false;
@@ -132,47 +142,42 @@ namespace GravadorDeTela
             }
         }
 
-        private void ProcessarParaArquivoUnico(string video, string audio, string saida)
+        private async Task ProcessarParaArquivoUnico(string video, string audio, string saida)
         {
             string ffmpegPath = GetFfmpegPath();
             if (ffmpegPath == null) return;
 
-            // Etapa 1: Juntar vídeo e áudio em um arquivo temporário perfeitamente sincronizado
-            lblStatus.Invoke((MethodInvoker)(() => lblStatus.Text = "Etapa 1/2: Sincronizando áudio e vídeo..."));
             string tempFile = Path.Combine(Path.GetDirectoryName(saida), "temp_synced.mp4");
+
+            lblStatus.Invoke((MethodInvoker)(() => lblStatus.Text = "Etapa 1/2: Sincronizando..."));
             string args1 = $"-i \"{video}\" -i \"{audio}\" -c:v copy -c:a aac -b:a 192k -shortest -y \"{tempFile}\"";
-            ExecutarFfmpeg(ffmpegPath, args1);
+            await ExecutarFfmpegComProgresso(ffmpegPath, args1, video);
 
             if (!File.Exists(tempFile)) throw new Exception("Falha ao criar o arquivo temporário sincronizado.");
 
-            // Etapa 2: Comprimir o arquivo temporário sincronizado para o arquivo final pequeno
-            lblStatus.Invoke((MethodInvoker)(() => lblStatus.Text = "Etapa 2/2: Comprimindo para o tamanho final..."));
+            lblStatus.Invoke((MethodInvoker)(() => lblStatus.Text = "Etapa 2/2: Comprimindo..."));
             string args2 = $"-i \"{tempFile}\" -c:v libx264 -preset ultrafast -crf 30 -c:a copy -y \"{saida}\"";
-            ExecutarFfmpeg(ffmpegPath, args2);
+            await ExecutarFfmpegComProgresso(ffmpegPath, args2, tempFile);
         }
 
-        private void ProcessarParaWhatsApp(string video, string audio)
+        private async Task ProcessarParaWhatsApp(string video, string audio)
         {
             string ffmpegPath = GetFfmpegPath();
             if (ffmpegPath == null) return;
 
-            // Etapa 1: Juntar vídeo e áudio em um arquivo temporário perfeitamente sincronizado
-            lblStatus.Invoke((MethodInvoker)(() => lblStatus.Text = "Etapa 1/2: Sincronizando áudio e vídeo..."));
             string tempFile = Path.Combine(_pastaDaGravacaoAtual, "temp_synced.mp4");
+
+            lblStatus.Invoke((MethodInvoker)(() => lblStatus.Text = "Etapa 1/2: Sincronizando..."));
             string args1 = $"-i \"{video}\" -i \"{audio}\" -c:v copy -c:a aac -b:a 192k -shortest -y \"{tempFile}\"";
-            ExecutarFfmpeg(ffmpegPath, args1);
+            await ExecutarFfmpegComProgresso(ffmpegPath, args1, video);
 
             if (!File.Exists(tempFile)) throw new Exception("Falha ao criar o arquivo temporário sincronizado.");
 
-            // Etapa 2: Dividir e comprimir o arquivo temporário sincronizado
-            lblStatus.Invoke((MethodInvoker)(() => lblStatus.Text = "Etapa 2/2: Dividindo e comprimindo as partes..."));
+            lblStatus.Invoke((MethodInvoker)(() => lblStatus.Text = "Etapa 2/2: Dividindo e Comprimindo..."));
             string outputPathPattern = Path.Combine(_pastaDaGravacaoAtual, "Parte_%03d.mp4");
-            string args2 = $"-i \"{tempFile}\" -c:v libx264 -preset ultrafast -crf 30 -an -f segment -segment_time 90 -reset_timestamps 1 -y \"{outputPathPattern}\"";
-            string args2_audio = $"-i \"{tempFile}\" -c:a aac -b:a 128k -f segment -segment_time 90 -reset_timestamps 1 -y {Path.Combine(_pastaDaGravacaoAtual, "audio_part_%03d.m4a")}"; // Separando para juntar depois
-            // A abordagem de dividir e manter o áudio é complexa. A mais simples é recodificar o vídeo e juntar com o áudio original a cada parte.
-            // Simplificando a lógica para evitar complexidade excessiva
-            string args_final = $"-i \"{tempFile}\" -c:v libx264 -preset ultrafast -crf 30 -c:a aac -b:a 128k -f segment -segment_time 90 -reset_timestamps 1 -y \"{outputPathPattern}\"";
-            ExecutarFfmpeg(ffmpegPath, args_final);
+            // CORREÇÃO: Garantindo que o tempo de divisão é 120 segundos
+            string args2 = $"-i \"{tempFile}\" -c:v libx264 -preset ultrafast -crf 30 -c:a aac -b:a 128k -f segment -segment_time 120 -reset_timestamps 1 -y \"{outputPathPattern}\"";
+            await ExecutarFfmpegComProgresso(ffmpegPath, args2, tempFile);
         }
 
         private string GetFfmpegPath()
@@ -186,34 +191,76 @@ namespace GravadorDeTela
             return ffmpegPath;
         }
 
-        private void ExecutarFfmpeg(string ffmpegPath, string args)
+        private async Task ExecutarFfmpegComProgresso(string ffmpegPath, string args, string inputFileForDuration)
         {
-            ProcessStartInfo psi = new ProcessStartInfo
-            {
-                FileName = ffmpegPath,
-                Arguments = args,
-                UseShellExecute = false,
-                RedirectStandardError = true,
-                RedirectStandardOutput = true,
-                CreateNoWindow = true
-            };
+            TimeSpan totalDuration = TimeSpan.Zero;
+            var tcs = new TaskCompletionSource<int>();
 
-            try
-            {
-                using (Process proc = Process.Start(psi))
+            await Task.Run(() => {
+                var psiDuration = new ProcessStartInfo
                 {
-                    string errorOutput = proc.StandardError.ReadToEnd();
-                    proc.WaitForExit();
+                    FileName = ffmpegPath,
+                    Arguments = $"-i \"{inputFileForDuration}\" -hide_banner",
+                    UseShellExecute = false,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                };
 
-                    if (proc.ExitCode != 0)
+                using (var process = Process.Start(psiDuration))
+                {
+                    string output = process.StandardError.ReadToEnd();
+                    process.WaitForExit();
+                    Match m = Regex.Match(output, @"Duration: (\d{2}):(\d{2}):(\d{2})\.(\d{2})");
+                    if (m.Success)
                     {
-                        throw new Exception("O FFmpeg reportou um erro durante o processamento.\n\nSaída FFmpeg:\n" + errorOutput);
+                        totalDuration = new TimeSpan(0, int.Parse(m.Groups[1].Value), int.Parse(m.Groups[2].Value), int.Parse(m.Groups[3].Value), int.Parse(m.Groups[4].Value) * 10);
                     }
                 }
-            }
-            catch (Exception ex)
+
+                var psiConvert = new ProcessStartInfo
+                {
+                    FileName = ffmpegPath,
+                    Arguments = args,
+                    UseShellExecute = false,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                };
+
+                var ffmpegProcess = new Process
+                {
+                    StartInfo = psiConvert,
+                    EnableRaisingEvents = true
+                };
+
+                ffmpegProcess.ErrorDataReceived += (sender, e) =>
+                {
+                    if (e.Data == null) return;
+                    Match m = Regex.Match(e.Data, @"time=(\d{2}):(\d{2}):(\d{2})\.(\d{2})");
+                    if (m.Success && totalDuration > TimeSpan.Zero)
+                    {
+                        var currentTime = new TimeSpan(0, int.Parse(m.Groups[1].Value), int.Parse(m.Groups[2].Value), int.Parse(m.Groups[3].Value), int.Parse(m.Groups[4].Value) * 10);
+                        double percentage = (currentTime.TotalSeconds / totalDuration.TotalSeconds) * 100;
+
+                        this.Invoke((MethodInvoker)delegate {
+                            progressBar1.Value = Math.Min(100, (int)percentage);
+                        });
+                    }
+                };
+
+                ffmpegProcess.Exited += (sender, e) => {
+                    tcs.TrySetResult(ffmpegProcess.ExitCode);
+                    ffmpegProcess.Dispose();
+                };
+
+                ffmpegProcess.Start();
+                ffmpegProcess.BeginErrorReadLine();
+                tcs.Task.Wait(); // Espera a tarefa de conversão terminar nesta thread de fundo
+            });
+
+            // Verifica o resultado após a conclusão
+            if (tcs.Task.Result != 0)
             {
-                MessageBox.Show("Erro durante a conversão: " + ex.Message, "Erro FFmpeg", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                throw new Exception($"FFmpeg terminou com código de erro {tcs.Task.Result}. Verifique os parâmetros e arquivos de entrada.");
             }
         }
     }
