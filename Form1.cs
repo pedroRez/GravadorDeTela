@@ -25,6 +25,7 @@ namespace GravadorDeTela
         {
             InitializeComponent();
             btnParar.Enabled = false;
+            // Assumindo que você tem uma ProgressBar 'progressBar1' e uma Label 'lblStatus' no seu formulário
             progressBar1.Visible = false;
             lblStatus.Visible = false;
         }
@@ -94,18 +95,19 @@ namespace GravadorDeTela
 
                 if (_modoWhatsApp)
                 {
-                    lblStatus.Text = "Dividindo e convertendo para MP4...";
-                    await DividirEConverter(videoPath, audioPath);
+                    await ProcessarParaWhatsApp(videoPath, audioPath);
                 }
                 else
                 {
-                    lblStatus.Text = "Juntando e convertendo para MP4...";
                     string outputPath = Path.Combine(_pastaDaGravacaoAtual, "gravacao_final.mp4");
-                    await JuntarParaArquivoUnico(videoPath, audioPath, outputPath);
+                    await ProcessarParaArquivoUnico(videoPath, audioPath, outputPath);
                 }
 
+                // Limpeza dos arquivos temporários
                 //File.Delete(videoPath);
                 //File.Delete(audioPath);
+                string tempFile = Path.Combine(_pastaDaGravacaoAtual, "temp_synced.mp4");
+                if (File.Exists(tempFile)) File.Delete(tempFile);
 
                 lblStatus.Text = "Processamento concluído!";
                 MessageBox.Show("Gravação e processamento concluídos!", "Sucesso", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -143,27 +145,34 @@ namespace GravadorDeTela
             }
         }
 
-        private async Task JuntarParaArquivoUnico(string video, string audio, string saida)
+        private async Task ProcessarParaArquivoUnico(string video, string audio, string saida)
         {
             string ffmpegPath = GetFfmpegPath();
             if (ffmpegPath == null) return;
 
-            // LÓGICA DE UMA ETAPA: Força o FPS de entrada e junta/comprime de uma vez
-            string args = $"-r {ScreenRecorder.FPS} -i \"{video}\" -i \"{audio}\" -c:v libx264 -preset ultrafast -crf 30 -c:a aac -b:a 192k -shortest -y \"{saida}\"";
+            string tempFile = Path.Combine(Path.GetDirectoryName(saida), "temp_synced.mp4");
 
-            await ExecutarFfmpegComProgresso(ffmpegPath, args, audio); // Usa o áudio para pegar a duração correta
+            lblStatus.Invoke((MethodInvoker)(() => lblStatus.Text = "Etapa 1/2: Sincronizando..."));
+            string args1 = $"-r {ScreenRecorder.FPS} -i \"{video}\" -i \"{audio}\" -c:v copy -c:a aac -b:a 192k -shortest -y \"{tempFile}\"";
+            await ExecutarFfmpegComProgresso(ffmpegPath, args1, audio);
+
+            if (!File.Exists(tempFile)) throw new Exception("Falha ao criar o arquivo temporário sincronizado.");
+
+            lblStatus.Invoke((MethodInvoker)(() => lblStatus.Text = "Etapa 2/2: Comprimindo..."));
+            string args2 = $"-i \"{tempFile}\" -c:v libx264 -preset ultrafast -crf 30 -c:a copy -y \"{saida}\"";
+            await ExecutarFfmpegComProgresso(ffmpegPath, args2, tempFile);
         }
 
-        private async Task DividirEConverter(string video, string audio)
+        private async Task ProcessarParaWhatsApp(string video, string audio)
         {
             string ffmpegPath = GetFfmpegPath();
             if (ffmpegPath == null) return;
 
-            // LÓGICA DE UMA ETAPA: Força o FPS, junta, comprime e divide de uma vez
+            // Para dividir, é melhor fazer em uma única etapa para maior precisão
+            lblStatus.Invoke((MethodInvoker)(() => lblStatus.Text = "Dividindo e Comprimindo..."));
             string outputPathPattern = Path.Combine(_pastaDaGravacaoAtual, "Parte_%03d.mp4");
-            string args = $"-r {ScreenRecorder.FPS} -i \"{video}\" -i \"{audio}\" -c:v libx264 -preset ultrafast -crf 30 -c:a aac -b:a 128k -f segment -segment_time 120 -reset_timestamps 1 -y \"{outputPathPattern}\"";
-
-            await ExecutarFfmpegComProgresso(ffmpegPath, args, audio); // Usa o áudio para pegar a duração correta
+            string args = $"-r {ScreenRecorder.FPS} -i \"{video}\" -i \"{audio}\" -c:v libx264 -preset ultrafast -crf 30 -c:a aac -b:a 128k -f segment -segment_time 120 -reset_timestamps 1 -shortest -y \"{outputPathPattern}\"";
+            await ExecutarFfmpegComProgresso(ffmpegPath, args, audio);
         }
 
         private string GetFfmpegPath()
@@ -196,7 +205,8 @@ namespace GravadorDeTela
                 EnableRaisingEvents = true
             };
 
-            ffmpegProcess.Exited += (sender, e) => {
+            ffmpegProcess.Exited += (sender, e) =>
+            {
                 tcs.TrySetResult(ffmpegProcess.ExitCode);
                 ffmpegProcess.Dispose();
             };
@@ -221,7 +231,8 @@ namespace GravadorDeTela
                     var currentTime = new TimeSpan(0, int.Parse(m.Groups[1].Value), int.Parse(m.Groups[2].Value), int.Parse(m.Groups[3].Value), int.Parse(m.Groups[4].Value) * 10);
                     double percentage = Math.Min(100, (currentTime.TotalSeconds / totalDuration.TotalSeconds) * 100);
 
-                    this.Invoke((MethodInvoker)delegate {
+                    this.Invoke((MethodInvoker)delegate
+                    {
                         progressBar1.Value = (int)percentage;
                     });
                 }
@@ -234,8 +245,6 @@ namespace GravadorDeTela
         }
     }
 
-    // A CLASSE SCREENRECORDER NÃO FOI ALTERADA NESTA VERSÃO FINAL.
-    // ELA JÁ ESTÁ ESTÁVEL E COM A SINCRONIZAÇÃO CORRETA.
     public class ScreenRecorder
     {
         private readonly string _pasta;
@@ -245,7 +254,6 @@ namespace GravadorDeTela
         private WasapiLoopbackCapture _capturaAudio;
         private WaveFileWriter _escritorAudio;
         private BufferedWaveProvider _audioBuffer;
-        private Thread _audioThread;
 
         private volatile bool _gravando;
         public bool IsRecording => _gravando;
@@ -255,6 +263,10 @@ namespace GravadorDeTela
 
         private Bitmap _bitmapTela;
         private Graphics _graficosTela;
+
+        private Stopwatch _stopwatch;
+        private long _audioBytesWritten;
+        private bool _audioReady;
 
         public ScreenRecorder(string pasta)
         {
@@ -268,32 +280,69 @@ namespace GravadorDeTela
             _gravando = true;
             IniciarGravacaoUnica();
 
-            var stopwatch = Stopwatch.StartNew();
+            // Aguarda primeiro pacote de áudio real
+            int tentativas = 0;
+            while (!_audioReady && tentativas < 20)
+            {
+                Thread.Sleep(100);
+                tentativas++;
+            }
+
+            // Espera o buffer encher (opcional)
+            while (_audioBuffer.BufferedBytes < _escritorAudio.WaveFormat.AverageBytesPerSecond / 2)
+            {
+                Thread.Sleep(100);
+            }
+
+            // Inicia cronômetro e descarta os 2 segundos iniciais do áudio
+            _stopwatch = Stopwatch.StartNew();
+            int bytesPorSegundo = _escritorAudio.WaveFormat.AverageBytesPerSecond;
+            _audioBuffer.Read(new byte[bytesPorSegundo * 2], 0, bytesPorSegundo * 2);
+
             long frameCount = 0;
             long ticksPerFrame = Stopwatch.Frequency / FPS;
+            var audioBufferTemp = new byte[bytesPorSegundo / 10]; // 100ms
 
             while (_gravando)
             {
                 long proximoFrameTicks = frameCount * ticksPerFrame;
                 var spinWait = new SpinWait();
-                while (stopwatch.ElapsedTicks < proximoFrameTicks)
+                while (_stopwatch.ElapsedTicks < proximoFrameTicks)
                 {
                     spinWait.SpinOnce();
                     if (!_gravando) break;
                 }
+
                 if (!_gravando) break;
 
                 try
                 {
+                    // Captura quadro de tela
                     var frame = CapturarTela();
                     _videoStream?.WriteFrame(true, frame, 0, frame.Length);
                     frameCount++;
+
+                    // Captura áudio disponível
+                    int disponivel = _audioBuffer.BufferedBytes;
+                    if (disponivel > 0)
+                    {
+                        if (audioBufferTemp.Length < disponivel)
+                            audioBufferTemp = new byte[disponivel];
+
+                        int lidos = _audioBuffer.Read(audioBufferTemp, 0, disponivel);
+                        if (lidos > 0)
+                        {
+                            _escritorAudio.Write(audioBufferTemp, 0, lidos);
+                            _audioBytesWritten += lidos;
+                        }
+                    }
                 }
                 catch
                 {
                     if (_gravando) Stop();
                 }
             }
+
             FinalizarGravacao();
         }
 
@@ -310,7 +359,11 @@ namespace GravadorDeTela
             _bitmapTela = new Bitmap(_largura, _altura, PixelFormat.Format32bppRgb);
             _graficosTela = Graphics.FromImage(_bitmapTela);
 
-            _escritorVideo = new AviWriter(arquivoVideo) { FramesPerSecond = FPS, EmitIndex1 = true };
+            _escritorVideo = new AviWriter(arquivoVideo)
+            {
+                FramesPerSecond = FPS,
+                EmitIndex1 = true
+            };
             _videoStream = _escritorVideo.AddVideoStream();
             _videoStream.Width = _largura;
             _videoStream.Height = _altura;
@@ -320,44 +373,62 @@ namespace GravadorDeTela
             _capturaAudio = new WasapiLoopbackCapture();
             _audioBuffer = new BufferedWaveProvider(_capturaAudio.WaveFormat)
             {
-                DiscardOnBufferOverflow = true
+                DiscardOnBufferOverflow = false
+            };
+            _escritorAudio = new WaveFileWriter(arquivoAudio, _audioBuffer.WaveFormat);
+
+            _capturaAudio.DataAvailable += (s, a) =>
+            {
+                try
+                {
+                    if (!_audioReady && a.BytesRecorded > 0)
+                        _audioReady = true;
+
+                    _audioBuffer?.AddSamples(a.Buffer, 0, a.BytesRecorded);
+                }
+                catch { }
             };
 
-            _escritorAudio = new WaveFileWriter(arquivoAudio, _audioBuffer.WaveFormat);
-            _capturaAudio.DataAvailable += (s, a) => _audioBuffer?.AddSamples(a.Buffer, 0, a.BytesRecorded);
-
-            _audioThread = new Thread(AudioWriteThread) { IsBackground = true };
-            _audioThread.Start();
-
+            _audioBytesWritten = 0;
+            _audioReady = false;
             _capturaAudio.StartRecording();
-        }
-
-        private void AudioWriteThread()
-        {
-            int bufferSize = _audioBuffer.WaveFormat.AverageBytesPerSecond / 10;
-            var buffer = new byte[bufferSize];
-
-            while (_gravando)
-            {
-                int bytesRead = _audioBuffer.Read(buffer, 0, buffer.Length);
-                if (bytesRead > 0)
-                {
-                    _escritorAudio?.Write(buffer, 0, bytesRead);
-                }
-                Thread.Sleep(100);
-            }
         }
 
         private void FinalizarGravacao()
         {
-            _gravando = false;
-            _audioThread?.Join(500);
+            _stopwatch?.Stop();
+
+            // Aguarda fim do buffer de áudio
+            int tentativas = 0;
+            while (_audioBuffer?.BufferedBytes > 0 && tentativas < 10)
+            {
+                Thread.Sleep(100);
+                tentativas++;
+            }
 
             _capturaAudio?.StopRecording();
+
+            // Escreve o que sobrou do buffer
+            try
+            {
+                if (_audioBuffer != null && _escritorAudio != null)
+                {
+                    var final = new byte[_audioBuffer.BufferedBytes];
+                    int lidos = _audioBuffer.Read(final, 0, final.Length);
+                    if (lidos > 0)
+                    {
+                        _escritorAudio.Write(final, 0, lidos);
+                        _audioBytesWritten += lidos;
+                    }
+                }
+            }
+            catch { }
+
             _capturaAudio?.Dispose();
             _capturaAudio = null;
 
-            _escritorAudio?.Close();
+            _escritorAudio?.Flush();
+            _escritorAudio?.Dispose();
             _escritorAudio = null;
 
             _escritorVideo?.Close();
