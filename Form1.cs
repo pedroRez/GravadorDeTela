@@ -177,10 +177,10 @@ namespace GravadorDeTela
 
         private string GetFfmpegPath()
         {
-            string ffmpegPath = Path.Combine(Application.StartupPath, "ffmpeg.exe");
+            string ffmpegPath = Path.Combine(Application.StartupPath, "RecursosExternos", "ffmpeg.exe");
             if (!File.Exists(ffmpegPath))
             {
-                MessageBox.Show("ffmpeg.exe não encontrado na pasta do programa!", "Erro Crítico", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("ffmpeg.exe não encontrado na pasta RecursosExternos!", "Erro Crítico", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return null;
             }
             return ffmpegPath;
