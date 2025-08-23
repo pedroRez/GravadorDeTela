@@ -126,7 +126,7 @@ namespace GravadorDeTela
 
             // 3) PATH
             var pathVar = Environment.GetEnvironmentVariable("PATH") ?? "";
-            foreach (var dir in pathVar.Split(';'))
+            foreach (var dir in pathVar.Split(Path.PathSeparator))
             {
                 try
                 {
