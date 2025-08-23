@@ -57,7 +57,7 @@ namespace GravadorDeTela
             txtStop.Enabled = chkStop.Checked;
 
             // Carregar dispositivos de áudio dshow
-            Shown += (s, e) => CarregarDispositivosAudio();
+            Shown += async (s, e) => await CarregarDispositivosAudio();
         }
 
         // ==================== UTILITÁRIOS ====================
@@ -140,7 +140,7 @@ namespace GravadorDeTela
 
         // ==================== LISTAGEM DSHOW ====================
 
-        private void CarregarDispositivosAudio()
+        private async Task CarregarDispositivosAudio()
         {
             cmbAudio.Items.Clear();
 
@@ -164,11 +164,26 @@ namespace GravadorDeTela
                     RedirectStandardOutput = false,
                     CreateNoWindow = true
                 };
-                using (var p = Process.Start(psi))
+
+                var sb = new StringBuilder();
+                using (var p = new Process { StartInfo = psi })
                 {
                     // O FFmpeg escreve a listagem de devices no STDERR
-                    text = p.StandardError.ReadToEnd();
-                    p.WaitForExit(7000); // dá tempo da enumeração terminar
+                    p.ErrorDataReceived += (s, e) =>
+                    {
+                        if (e.Data != null) sb.AppendLine(e.Data);
+                    };
+
+                    p.Start();
+                    p.BeginErrorReadLine();
+
+                    var waitTask = Task.Run(() => p.WaitForExit());
+                    await Task.WhenAny(waitTask, Task.Delay(7000));
+                    if (!p.HasExited)
+                    {
+                        try { p.Kill(); } catch { }
+                    }
+                    text = sb.ToString();
                 }
             }
             catch (Exception ex)
