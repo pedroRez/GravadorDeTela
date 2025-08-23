@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -143,6 +144,83 @@ namespace GravadorDeTela
                 catch { }
             }
             return null;
+        }
+
+        private string GetFfprobePath()
+        {
+            // 1) RecursosExternos\\ffprobe.exe (junto ao app)
+            string p = Path.Combine(Application.StartupPath, "RecursosExternos", "ffprobe.exe");
+            if (File.Exists(p)) return p;
+
+            // 2) Pasta atual
+            p = Path.Combine(Environment.CurrentDirectory, "ffprobe.exe");
+            if (File.Exists(p)) return p;
+
+            // 3) PATH
+            var pathVar = Environment.GetEnvironmentVariable("PATH") ?? "";
+            foreach (var dir in pathVar.Split(Path.PathSeparator))
+            {
+                try
+                {
+                    var cand = Path.Combine(dir.Trim(), "ffprobe.exe");
+                    if (File.Exists(cand)) return cand;
+                }
+                catch { }
+            }
+            return null;
+        }
+
+        private void VerificarSincronia(string caminhoArquivo)
+        {
+            try
+            {
+                var ffprobe = GetFfprobePath();
+                if (ffprobe == null || !File.Exists(caminhoArquivo)) return;
+
+                var psi = new ProcessStartInfo
+                {
+                    FileName = ffprobe,
+                    Arguments = $"-v error -show_entries stream=codec_type,start_time,duration -of default=noprint_wrappers=1 \"{caminhoArquivo}\"",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                };
+
+                string output;
+                using (var p = new Process { StartInfo = psi })
+                {
+                    p.Start();
+                    output = p.StandardOutput.ReadToEnd();
+                    p.WaitForExit();
+                }
+
+                double vStart = 0, aStart = 0, vDur = 0, aDur = 0;
+                var rx = new Regex("codec_type=(?<type>\\w+)\\s+.*?start_time=(?<start>[-0-9\\.]+)\\s+.*?duration=(?<dur>[-0-9\\.]+)", RegexOptions.Singleline);
+                foreach (Match m in rx.Matches(output))
+                {
+                    var type = m.Groups["type"].Value;
+                    var start = double.Parse(m.Groups["start"].Value, CultureInfo.InvariantCulture);
+                    var dur = double.Parse(m.Groups["dur"].Value, CultureInfo.InvariantCulture);
+                    if (type == "video") { vStart = start; vDur = dur; }
+                    else if (type == "audio") { aStart = start; aDur = dur; }
+                }
+
+                const double LIMIAR = 0.1; // 100 ms
+                double diffStart = Math.Abs(vStart - aStart);
+                double diffDur = Math.Abs(vDur - aDur);
+
+                if (diffStart > LIMIAR || diffDur > LIMIAR)
+                {
+                    MessageBox.Show(
+                        $"Possível diferença entre áudio e vídeo.\nΔ início: {diffStart:F3}s, Δ duração: {diffDur:F3}s",
+                        "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log("Erro ao verificar sincronia: " + ex);
+            }
         }
 
         private void AbrirPasta(string caminho)
@@ -419,6 +497,8 @@ namespace GravadorDeTela
                 AtualizaStatus("Finalizando...", marquee: true);
                 _stopAutoCts?.Cancel();
                 await PararFfmpeg();
+                var arquivoFinal = Path.Combine(_pastaDaGravacaoAtual, "gravacao_final.mp4");
+                if (File.Exists(arquivoFinal)) VerificarSincronia(arquivoFinal);
                 AtualizaStatus("Processamento concluído!", marquee: false);
                 AbrirPasta(_pastaDaGravacaoAtual);
             }
