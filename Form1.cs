@@ -463,22 +463,22 @@ namespace GravadorDeTela
 
             try
             {
-                if (!_ffmpegProc.HasExited)
-                {
-                    try { _ffmpegProc.StandardInput.WriteLine("q"); } catch { }
-                }
-
                 var tcs = new TaskCompletionSource<bool>();
                 _ffmpegProc.Exited += (s, e) => tcs.TrySetResult(true);
 
                 if (!_ffmpegProc.HasExited)
                 {
-                    await Task.WhenAny(tcs.Task, Task.Delay(STOP_TIMEOUT_MS));
-                }
+                    try { _ffmpegProc.StandardInput.WriteLine("q"); } catch { }
 
-                if (!_ffmpegProc.HasExited)
-                {
-                    try { _ffmpegProc.Kill(); } catch { }
+                    if (!_ffmpegProc.HasExited)
+                    {
+                        await Task.WhenAny(tcs.Task, Task.Delay(STOP_TIMEOUT_MS));
+
+                        if (!_ffmpegProc.HasExited)
+                        {
+                            try { _ffmpegProc.Kill(); } catch { }
+                        }
+                    }
                 }
             }
             finally
