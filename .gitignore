@@ -1,6 +1,7 @@
 # Arquivos de compilação do Visual Studio
 bin/
 obj/
+installer/
 
 # Arquivos de configuração do usuário do Visual Studio
 .vs/
