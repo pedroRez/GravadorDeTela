@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Runtime.InteropServices;
 
 namespace GravadorDeTela
 {
@@ -138,6 +139,26 @@ namespace GravadorDeTela
             return null;
         }
 
+        private void AbrirPasta(string caminho)
+        {
+            try
+            {
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    Process.Start("explorer.exe", caminho);
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    Process.Start("xdg-open", caminho);
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    Process.Start("open", caminho);
+                }
+            }
+            catch { }
+        }
+
         // ==================== LISTAGEM DSHOW ====================
 
         private async Task CarregarDispositivosAudio()
@@ -247,7 +268,7 @@ namespace GravadorDeTela
         {
             if (!string.IsNullOrEmpty(_pastaDaGravacaoAtual) && Directory.Exists(_pastaDaGravacaoAtual))
             {
-                try { Process.Start("explorer.exe", _pastaDaGravacaoAtual); } catch { }
+                AbrirPasta(_pastaDaGravacaoAtual);
             }
             else
             {
@@ -393,7 +414,7 @@ namespace GravadorDeTela
                 _stopAutoCts?.Cancel();
                 await PararFfmpeg();
                 AtualizaStatus("Processamento concluído!", marquee: false);
-                try { Process.Start("explorer.exe", _pastaDaGravacaoAtual); } catch { }
+                AbrirPasta(_pastaDaGravacaoAtual);
             }
             catch (Exception ex)
             {
