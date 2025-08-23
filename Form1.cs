@@ -73,7 +73,10 @@ namespace GravadorDeTela
                 File.AppendAllText(Path.Combine(raiz, "gravador.log"),
                     $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {msg}{Environment.NewLine}");
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Erro ao gravar log: " + ex);
+            }
         }
 
         private void AtualizaStatus(string texto, bool marquee = true)
@@ -85,7 +88,10 @@ namespace GravadorDeTela
                 lblStatus.Text = texto;
                 lblStatus.Visible = true;
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Log("Erro ao atualizar status: " + ex);
+            }
         }
 
         private void FinalizarUI()
