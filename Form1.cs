@@ -336,12 +336,12 @@ namespace GravadorDeTela
                 _pastaDaGravacaoAtual = CriarDiretorioGravavel();
 
                 // montar argumentos FFmpeg
-                string videoIn = $"-rtbufsize 256M -f gdigrab -draw_mouse 1 -framerate {FPS} -i desktop";
+                string videoIn = $"-rtbufsize 256M -f gdigrab -draw_mouse 1 -framerate {FPS} -use_wallclock_as_timestamps 1 -i desktop";
 
                 // usar moniker se existir, senão o nome amigável
                 string audioId = !string.IsNullOrWhiteSpace(dev.Moniker) ? dev.Moniker : dev.DisplayName;
                 // Atenção: moniker contém barra invertida → precisa escapar as aspas apenas.
-                string audioIn = $"-f dshow -thread_queue_size 1024 -i audio=\"{audioId}\"";
+                string audioIn = $"-f dshow -thread_queue_size 1024 -use_wallclock_as_timestamps 1 -i audio=\"{audioId}\"";
 
                 string map = "-map 0:v -map 1:a -shortest ";
 
