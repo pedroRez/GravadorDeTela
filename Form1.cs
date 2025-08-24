@@ -420,11 +420,11 @@ namespace GravadorDeTela
                 // usar moniker se existir, senão o nome amigável
                 string audioId = !string.IsNullOrWhiteSpace(dev.Moniker) ? dev.Moniker : dev.DisplayName;
                 // Atenção: moniker contém barra invertida → precisa escapar as aspas apenas.
-                string audioIn = $"-f dshow -audio_buffer_size 100 -rtbufsize 64M -thread_queue_size {THREAD_QUEUE_SIZE} -use_wallclock_as_timestamps 1 -i audio=\"{audioId}\"";
+                string audioIn = $"-f dshow -audio_buffer_size 100 -rtbufsize 64M -thread_queue_size {THREAD_QUEUE_SIZE} -i audio=\"{audioId}\"";
 
                 string map = "-map 0:v -map 1:a -shortest ";
 
-                string audioOpts = "-af aresample=async=1:first_pts=0 -c:a aac -b:a " + AUDIO_KBPS + "k ";
+                string audioOpts = "-af aresample=async=1:first_pts=0 -ac 2 -ar 44100 -c:a aac -b:a " + AUDIO_KBPS + "k ";
                 string argsSaida;
                 if (chkModoWhatsApp.Checked)
                 {
