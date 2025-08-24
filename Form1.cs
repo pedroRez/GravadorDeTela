@@ -437,7 +437,7 @@ namespace GravadorDeTela
                         IsAudioEnabled = true,
                         AudioOutputDevice = dev.DisplayName
                     },
-                    VideoOptions = new VideoOptions
+                    VideoEncoderOptions = new VideoEncoderOptions
                     {
                         Framerate = FPS,
                         Quality = VIDEO_CRF
