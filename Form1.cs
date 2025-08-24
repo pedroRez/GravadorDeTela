@@ -20,6 +20,7 @@ namespace GravadorDeTela
         private const int PADRAO_SEGUNDOS_WHATSAPP = 120; // padrão se não informado
         private const int MIN_SEGUNDOS_WHATSAPP = 15;
         private const int STOP_TIMEOUT_MS = 5000;
+        private const int THREAD_QUEUE_SIZE = 4096;
 
         // ===== Estado =====
         private Process _ffmpegProc;
@@ -414,22 +415,23 @@ namespace GravadorDeTela
                 _pastaDaGravacaoAtual = CriarDiretorioGravavel();
 
                 // montar argumentos FFmpeg
-                string videoIn = $"-rtbufsize 256M -f gdigrab -draw_mouse 1 -framerate {FPS} -use_wallclock_as_timestamps 1 -i desktop";
+                string videoIn = $"-thread_queue_size {THREAD_QUEUE_SIZE} -rtbufsize 256M -f gdigrab -draw_mouse 1 -framerate {FPS} -use_wallclock_as_timestamps 1 -i desktop";
 
                 // usar moniker se existir, senão o nome amigável
                 string audioId = !string.IsNullOrWhiteSpace(dev.Moniker) ? dev.Moniker : dev.DisplayName;
                 // Atenção: moniker contém barra invertida → precisa escapar as aspas apenas.
-                string audioIn = $"-f dshow -thread_queue_size 1024 -use_wallclock_as_timestamps 1 -i audio=\"{audioId}\"";
+                string audioIn = $"-f dshow -rtbufsize 64M -thread_queue_size {THREAD_QUEUE_SIZE} -use_wallclock_as_timestamps 1 -i audio=\"{audioId}\"";
 
                 string map = "-map 0:v -map 1:a -shortest ";
 
+                string audioOpts = "-af aresample=async=1:first_pts=0 -c:a aac -b:a " + AUDIO_KBPS + "k ";
                 string argsSaida;
                 if (chkModoWhatsApp.Checked)
                 {
                     string pattern = Path.Combine(_pastaDaGravacaoAtual, "Parte_%03d.mp4");
                     argsSaida =
                         "-c:v libx264 -preset veryfast -crf " + VIDEO_CRF + " -pix_fmt yuv420p " +
-                        "-c:a aac -b:a " + AUDIO_KBPS + "k " +
+                        audioOpts +
                         "-fps_mode cfr -fflags +genpts " +
                         "-f segment -segment_time " + segmentSeconds + " -segment_time_delta 0.05 " +
                         "-force_key_frames \"expr:gte(t,n_forced*" + segmentSeconds + ")\" " +
@@ -441,7 +443,7 @@ namespace GravadorDeTela
                     string arquivoSaida = Path.Combine(_pastaDaGravacaoAtual, "gravacao_final.mp4");
                     argsSaida =
                         "-c:v libx264 -preset veryfast -crf " + VIDEO_CRF + " -pix_fmt yuv420p " +
-                        "-c:a aac -b:a " + AUDIO_KBPS + "k " +
+                        audioOpts +
                         "-fps_mode cfr -fflags +genpts -movflags +faststart " +
                         $"\"{arquivoSaida}\"";
                 }
