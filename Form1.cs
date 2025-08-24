@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
 using ScreenRecorderLib;
+using WinFormsTimer = System.Windows.Forms.Timer;
 
 namespace GravadorDeTela
 {
@@ -28,7 +29,7 @@ namespace GravadorDeTela
         private string _pastaDaGravacaoAtual;
         private CancellationTokenSource _stopAutoCts;
         private Recorder _recorder;
-        private Timer _segmentTimer;
+        private WinFormsTimer _segmentTimer;
         private int _segmentIndex;
         private int _audioDelayMs;
 
@@ -476,7 +477,7 @@ namespace GravadorDeTela
 
                 if (chkModoWhatsApp.Checked)
                 {
-                    _segmentTimer = new Timer();
+                    _segmentTimer = new WinFormsTimer();
                     _segmentTimer.Interval = segmentSeconds * 1000;
                     _segmentTimer.Tick += (s2, e2) =>
                     {
