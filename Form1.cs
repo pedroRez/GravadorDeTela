@@ -108,6 +108,7 @@ namespace GravadorDeTela
             txtSegmentacao.Enabled = chkModoWhatsApp.Checked;
             chkStop.Enabled = true;
             txtStop.Enabled = chkStop.Checked;
+            numDelay.Enabled = true;
         }
 
         private string CriarDiretorioGravavel()
@@ -420,7 +421,9 @@ namespace GravadorDeTela
                 // usar moniker se existir, senão o nome amigável
                 string audioId = !string.IsNullOrWhiteSpace(dev.Moniker) ? dev.Moniker : dev.DisplayName;
                 // Atenção: moniker contém barra invertida → precisa escapar as aspas apenas.
-                string audioIn = $"-f dshow -audio_buffer_size 100 -rtbufsize 64M -thread_queue_size {THREAD_QUEUE_SIZE} -use_wallclock_as_timestamps 1 -i audio=\"{audioId}\"";
+                int delayMs = (int)numDelay.Value;
+                string offsetArg = delayMs == 0 ? string.Empty : $"-itsoffset {(delayMs / 1000.0).ToString(CultureInfo.InvariantCulture)} ";
+                string audioIn = offsetArg + $"-f dshow -audio_buffer_size 100 -rtbufsize 64M -thread_queue_size {THREAD_QUEUE_SIZE} -use_wallclock_as_timestamps 1 -i audio=\"{audioId}\"";
 
                 string map = "-map 0:v -map 1:a -shortest ";
 
@@ -480,6 +483,7 @@ namespace GravadorDeTela
                 chkStop.Enabled = false;
                 txtStop.Enabled = false;
                 txtSegmentacao.Enabled = false;
+                numDelay.Enabled = false;
                 this.Cursor = Cursors.WaitCursor;
                 AtualizaStatus("Iniciando gravação...");
             }
