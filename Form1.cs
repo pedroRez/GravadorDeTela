@@ -427,7 +427,7 @@ namespace GravadorDeTela
 
                 string map = "-map 0:v -map 1:a -shortest ";
 
-                string audioOpts = "-af aresample=async=1:first_pts=0 -ac 2 -ar 44100 -c:a aac -b:a " + AUDIO_KBPS + "k ";
+                string audioOpts = "-af aresample=async=1:min_hard_comp=0.1:first_pts=0 -ac 2 -ar 44100 -c:a aac -b:a " + AUDIO_KBPS + "k ";
                 string argsSaida;
                 if (chkModoWhatsApp.Checked)
                 {
