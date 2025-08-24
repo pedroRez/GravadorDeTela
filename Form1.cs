@@ -30,6 +30,7 @@ namespace GravadorDeTela
         private Recorder _recorder;
         private Timer _segmentTimer;
         private int _segmentIndex;
+        private int _audioDelayMs;
 
         // ===== Classe interna para popular o Combo =====
         private class AudioDeviceItem
@@ -62,6 +63,7 @@ namespace GravadorDeTela
             // chkModoWhatsApp, txtSegmentacao, chkStop, txtStop, cmbAudio
             txtSegmentacao.Enabled = chkModoWhatsApp.Checked;
             txtStop.Enabled = chkStop.Checked;
+            txtAudioDelay.Text = Properties.Settings.Default.AudioDelay.ToString();
 
             // Carregar dispositivos de áudio dshow
             Shown += async (s, e) => await CarregarDispositivosAudio();
@@ -112,7 +114,7 @@ namespace GravadorDeTela
             txtSegmentacao.Enabled = chkModoWhatsApp.Checked;
             chkStop.Enabled = true;
             txtStop.Enabled = chkStop.Checked;
-            numDelay.Enabled = true;
+            txtAudioDelay.Enabled = true;
         }
 
         private string CriarDiretorioGravavel()
@@ -409,6 +411,22 @@ namespace GravadorDeTela
                     }
                 }
 
+                int audioDelay = 0;
+                var delayText = txtAudioDelay.Text.Trim();
+                if (delayText.Length > 0)
+                {
+                    if (!int.TryParse(delayText, out audioDelay) || audioDelay < 0)
+                    {
+                        MessageBox.Show("Informe atraso de áudio válido (inteiro ≥ 0).",
+                            "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        txtAudioDelay.Focus();
+                        return;
+                    }
+                }
+                _audioDelayMs = audioDelay;
+                Properties.Settings.Default.AudioDelay = audioDelay;
+                Properties.Settings.Default.Save();
+
                 _pastaDaGravacaoAtual = CriarDiretorioGravavel();
 
                 var options = new RecorderOptions
@@ -495,7 +513,7 @@ namespace GravadorDeTela
                 chkStop.Enabled = false;
                 txtStop.Enabled = false;
                 txtSegmentacao.Enabled = false;
-                numDelay.Enabled = false;
+                txtAudioDelay.Enabled = false;
                 this.Cursor = Cursors.WaitCursor;
                 AtualizaStatus("Iniciando gravação...");
             }
@@ -530,6 +548,21 @@ namespace GravadorDeTela
 
         private void IniciarFfmpeg(string ffmpegPath, string args)
         {
+            if (_audioDelayMs > 0)
+            {
+                var delayArg = $" -af adelay={_audioDelayMs}|{_audioDelayMs}";
+                int idx = args.IndexOf("audioIn", StringComparison.Ordinal);
+                if (idx >= 0)
+                {
+                    idx += "audioIn".Length;
+                    args = args.Insert(idx, delayArg);
+                }
+                else
+                {
+                    args += delayArg;
+                }
+            }
+
             Log("FFmpeg START: " + args);
 
             var psi = new ProcessStartInfo

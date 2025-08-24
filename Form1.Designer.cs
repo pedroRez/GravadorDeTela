@@ -42,9 +42,8 @@
             this.cmbAudio = new System.Windows.Forms.ComboBox();
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
-            this.numDelay = new System.Windows.Forms.NumericUpDown();
+            this.txtAudioDelay = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
-            ((System.ComponentModel.ISupportInitialize)(this.numDelay)).BeginInit();
             this.SuspendLayout();
             // 
             // label1
@@ -174,27 +173,13 @@
             this.label4.TabIndex = 14;
             this.label4.Text = "para LoLo";
             //
-            // numDelay
+            // txtAudioDelay
             //
-            this.numDelay.Increment = new decimal(new int[] {
-            100,
-            0,
-            0,
-            0});
-            this.numDelay.Location = new System.Drawing.Point(480, 267);
-            this.numDelay.Maximum = new decimal(new int[] {
-            10000,
-            0,
-            0,
-            0});
-            this.numDelay.Minimum = new decimal(new int[] {
-            10000,
-            0,
-            0,
-            -2147483648});
-            this.numDelay.Name = "numDelay";
-            this.numDelay.Size = new System.Drawing.Size(72, 20);
-            this.numDelay.TabIndex = 15;
+            this.txtAudioDelay.Location = new System.Drawing.Point(480, 267);
+            this.txtAudioDelay.Name = "txtAudioDelay";
+            this.txtAudioDelay.Size = new System.Drawing.Size(72, 20);
+            this.txtAudioDelay.TabIndex = 15;
+            this.txtAudioDelay.Text = "0";
             //
             // label5
             //
@@ -211,7 +196,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(615, 326);
             this.Controls.Add(this.label5);
-            this.Controls.Add(this.numDelay);
+            this.Controls.Add(this.txtAudioDelay);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.cmbAudio);
@@ -228,7 +213,6 @@
             this.Controls.Add(this.label1);
             this.Name = "Form1";
             this.Text = "Form1";
-            ((System.ComponentModel.ISupportInitialize)(this.numDelay)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -250,7 +234,7 @@
         private System.Windows.Forms.ComboBox cmbAudio;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.NumericUpDown numDelay;
+        private System.Windows.Forms.TextBox txtAudioDelay;
         private System.Windows.Forms.Label label5;
     }
 }

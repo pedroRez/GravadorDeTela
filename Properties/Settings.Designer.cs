@@ -22,5 +22,17 @@ namespace GravadorDeTela.Properties {
                 return defaultInstance;
             }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int AudioDelay {
+            get {
+                return ((int)(this["AudioDelay"]));
+            }
+            set {
+                this["AudioDelay"] = value;
+            }
+        }
     }
 }
