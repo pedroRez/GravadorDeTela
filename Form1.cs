@@ -20,7 +20,7 @@ namespace GravadorDeTela
         private const int PADRAO_SEGUNDOS_WHATSAPP = 120; // padrão se não informado
         private const int MIN_SEGUNDOS_WHATSAPP = 15;
         private const int STOP_TIMEOUT_MS = 5000;
-        private const int THREAD_QUEUE_SIZE = 4096;
+        private const int THREAD_QUEUE_SIZE = 8192;
 
         // ===== Estado =====
         private Process _ffmpegProc;
@@ -420,7 +420,7 @@ namespace GravadorDeTela
                 // usar moniker se existir, senão o nome amigável
                 string audioId = !string.IsNullOrWhiteSpace(dev.Moniker) ? dev.Moniker : dev.DisplayName;
                 // Atenção: moniker contém barra invertida → precisa escapar as aspas apenas.
-                string audioIn = $"-f dshow -rtbufsize 64M -thread_queue_size {THREAD_QUEUE_SIZE} -use_wallclock_as_timestamps 1 -i audio=\"{audioId}\"";
+                string audioIn = $"-f dshow -audio_buffer_size 100 -rtbufsize 64M -thread_queue_size {THREAD_QUEUE_SIZE} -use_wallclock_as_timestamps 1 -i audio=\"{audioId}\"";
 
                 string map = "-map 0:v -map 1:a -shortest ";
 
