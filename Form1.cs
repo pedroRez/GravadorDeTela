@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
+using ScreenRecorderLib;
 
 namespace GravadorDeTela
 {
@@ -26,6 +27,9 @@ namespace GravadorDeTela
         private Process _ffmpegProc;
         private string _pastaDaGravacaoAtual;
         private CancellationTokenSource _stopAutoCts;
+        private Recorder _recorder;
+        private Timer _segmentTimer;
+        private int _segmentIndex;
 
         // ===== Classe interna para popular o Combo =====
         private class AudioDeviceItem
@@ -367,14 +371,6 @@ namespace GravadorDeTela
         {
             try
             {
-                var ffmpeg = GetFfmpegPath();
-                if (ffmpeg == null)
-                {
-                    MessageBox.Show("ffmpeg.exe não encontrado. Coloque em RecursosExternos\\ffmpeg.exe ou no PATH.",
-                        "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-
                 // valida dispositivo de áudio
                 if (cmbAudio.SelectedItem == null)
                 {
@@ -415,46 +411,62 @@ namespace GravadorDeTela
 
                 _pastaDaGravacaoAtual = CriarDiretorioGravavel();
 
-                // montar argumentos FFmpeg
-                string videoIn = $"-thread_queue_size {THREAD_QUEUE_SIZE} -rtbufsize 256M -f gdigrab -draw_mouse 1 -framerate {FPS} -use_wallclock_as_timestamps 1 -i desktop";
+                var options = new RecorderOptions
+                {
+                    AudioOptions = new AudioOptions
+                    {
+                        IsAudioEnabled = true,
+                        AudioOutputDevice = dev.DisplayName
+                    },
+                    VideoOptions = new VideoOptions
+                    {
+                        Framerate = FPS,
+                        Quality = VIDEO_CRF
+                    }
+                };
 
-                // usar moniker se existir, senão o nome amigável
-                string audioId = !string.IsNullOrWhiteSpace(dev.Moniker) ? dev.Moniker : dev.DisplayName;
-                // Atenção: moniker contém barra invertida → precisa escapar as aspas apenas.
-                int delayMs = (int)numDelay.Value;
-                string offsetArg = delayMs == 0 ? string.Empty : $"-itsoffset {(delayMs / 1000.0).ToString(CultureInfo.InvariantCulture)} ";
-                string audioIn = offsetArg + $"-f dshow -audio_buffer_size 100 -rtbufsize 64M -thread_queue_size {THREAD_QUEUE_SIZE} -use_wallclock_as_timestamps 1 -i audio=\"{audioId}\"";
+                _recorder = Recorder.CreateRecorder(options);
 
-                string map = "-map 0:v -map 1:a -shortest ";
+                _segmentIndex = 1;
+                string output = chkModoWhatsApp.Checked
+                    ? Path.Combine(_pastaDaGravacaoAtual, $"Parte_{_segmentIndex:000}.mp4")
+                    : Path.Combine(_pastaDaGravacaoAtual, "gravacao_final.mp4");
 
-                string audioOpts = "-af aresample=async=1:min_hard_comp=0.1:first_pts=0 -ac 2 -ar 44100 -c:a aac -b:a " + AUDIO_KBPS + "k ";
-                string argsSaida;
+                _recorder.OnRecordingComplete += (s2, e2) =>
+                {
+                    if (_segmentTimer != null)
+                    {
+                        _segmentIndex++;
+                        string next = Path.Combine(_pastaDaGravacaoAtual, $"Parte_{_segmentIndex:000}.mp4");
+                        _recorder.Record(next);
+                        _segmentTimer.Start();
+                    }
+                    else
+                    {
+                        this.BeginInvoke((MethodInvoker)(() =>
+                        {
+                            var arquivoFinal = Path.Combine(_pastaDaGravacaoAtual, "gravacao_final.mp4");
+                            if (File.Exists(arquivoFinal)) VerificarSincronia(arquivoFinal);
+                            AtualizaStatus("Processamento concluído!", marquee: false);
+                            AbrirPasta(_pastaDaGravacaoAtual);
+                            FinalizarUI();
+                        }));
+                    }
+                };
+
+                _recorder.Record(output);
+
                 if (chkModoWhatsApp.Checked)
                 {
-                    string pattern = Path.Combine(_pastaDaGravacaoAtual, "Parte_%03d.mp4");
-                    argsSaida =
-                        "-c:v libx264 -preset veryfast -crf " + VIDEO_CRF + " -pix_fmt yuv420p " +
-                        audioOpts +
-                        "-fps_mode cfr -fflags +genpts " +
-                        "-f segment -segment_time " + segmentSeconds + " -segment_time_delta 0.05 " +
-                        "-force_key_frames \"expr:gte(t,n_forced*" + segmentSeconds + ")\" " +
-                        "-reset_timestamps 1 -segment_format mp4 -segment_format_options movflags=+faststart " +
-                        $"\"{pattern}\"";
+                    _segmentTimer = new Timer();
+                    _segmentTimer.Interval = segmentSeconds * 1000;
+                    _segmentTimer.Tick += (s2, e2) =>
+                    {
+                        _segmentTimer.Stop();
+                        _recorder.Stop();
+                    };
+                    _segmentTimer.Start();
                 }
-                else
-                {
-                    string arquivoSaida = Path.Combine(_pastaDaGravacaoAtual, "gravacao_final.mp4");
-                    argsSaida =
-                        "-c:v libx264 -preset veryfast -crf " + VIDEO_CRF + " -pix_fmt yuv420p " +
-                        audioOpts +
-                        "-fps_mode cfr -fflags +genpts -movflags +faststart " +
-                        $"\"{arquivoSaida}\"";
-                }
-
-                string args = "-hide_banner -y " + videoIn + " " + audioIn + " " + map + argsSaida;
-
-                // Inicia FFmpeg
-                IniciarFfmpeg(ffmpeg, args);
 
                 // Stop programado (se houver)
                 if (chkStop.Checked && stopMin > 0)
@@ -495,26 +507,21 @@ namespace GravadorDeTela
             }
         }
 
-        private async void btnParar_Click(object sender, EventArgs e)
+        private void btnParar_Click(object sender, EventArgs e)
         {
             try
             {
                 btnParar.Enabled = false;
                 AtualizaStatus("Finalizando...", marquee: true);
                 _stopAutoCts?.Cancel();
-                await PararFfmpeg();
-                var arquivoFinal = Path.Combine(_pastaDaGravacaoAtual, "gravacao_final.mp4");
-                if (File.Exists(arquivoFinal)) VerificarSincronia(arquivoFinal);
-                AtualizaStatus("Processamento concluído!", marquee: false);
-                AbrirPasta(_pastaDaGravacaoAtual);
+                _segmentTimer?.Stop();
+                _segmentTimer = null;
+                _recorder?.Stop();
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Erro ao finalizar: " + ex.Message, "Erro",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            finally
-            {
                 FinalizarUI();
             }
         }
