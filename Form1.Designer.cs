@@ -42,6 +42,9 @@
             this.cmbAudio = new System.Windows.Forms.ComboBox();
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
+            this.numDelay = new System.Windows.Forms.NumericUpDown();
+            this.label5 = new System.Windows.Forms.Label();
+            ((System.ComponentModel.ISupportInitialize)(this.numDelay)).BeginInit();
             this.SuspendLayout();
             // 
             // label1
@@ -163,19 +166,52 @@
             this.label3.Text = "Escolha o audio de captura:";
             // 
             // label4
-            // 
+            //
             this.label4.AutoSize = true;
             this.label4.Location = new System.Drawing.Point(-2, 313);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(55, 13);
             this.label4.TabIndex = 14;
             this.label4.Text = "para LoLo";
-            // 
+            //
+            // numDelay
+            //
+            this.numDelay.Increment = new decimal(new int[] {
+            100,
+            0,
+            0,
+            0});
+            this.numDelay.Location = new System.Drawing.Point(480, 267);
+            this.numDelay.Maximum = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            0});
+            this.numDelay.Minimum = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            -2147483648});
+            this.numDelay.Name = "numDelay";
+            this.numDelay.Size = new System.Drawing.Size(72, 20);
+            this.numDelay.TabIndex = 15;
+            //
+            // label5
+            //
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(334, 269);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(105, 13);
+            this.label5.TabIndex = 16;
+            this.label5.Text = "Atraso do áudio (ms):";
+            //
             // Form1
-            // 
+            //
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(615, 326);
+            this.Controls.Add(this.label5);
+            this.Controls.Add(this.numDelay);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.cmbAudio);
@@ -192,6 +228,7 @@
             this.Controls.Add(this.label1);
             this.Name = "Form1";
             this.Text = "Form1";
+            ((System.ComponentModel.ISupportInitialize)(this.numDelay)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -213,6 +250,8 @@
         private System.Windows.Forms.ComboBox cmbAudio;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.NumericUpDown numDelay;
+        private System.Windows.Forms.Label label5;
     }
 }
 
