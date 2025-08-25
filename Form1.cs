@@ -457,8 +457,11 @@ namespace GravadorDeTela
                     {
                         _segmentIndex++;
                         string next = Path.Combine(_pastaDaGravacaoAtual, $"Parte_{_segmentIndex:000}.mp4");
-                        _recorder.Record(next);
-                        _segmentTimer.Start();
+                        this.BeginInvoke((MethodInvoker)(() =>
+                        {
+                            _recorder.Record(next);
+                            _segmentTimer.Start();
+                        }));
                     }
                     else
                     {
