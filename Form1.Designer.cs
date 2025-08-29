@@ -44,6 +44,9 @@
             this.label4 = new System.Windows.Forms.Label();
             this.txtAudioDelay = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
+            this.numQuality = new System.Windows.Forms.NumericUpDown();
+            ((System.ComponentModel.ISupportInitialize)(this.numQuality)).BeginInit();
             this.SuspendLayout();
             // 
             // label1
@@ -190,11 +193,44 @@
             this.label5.TabIndex = 16;
             this.label5.Text = "Atraso do áudio (ms):";
             //
+            // label6
+            //
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(334, 217);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(104, 13);
+            this.label6.TabIndex = 17;
+            this.label6.Text = "Qualidade do vídeo:";
+            //
+            // numQuality
+            //
+            this.numQuality.Location = new System.Drawing.Point(480, 215);
+            this.numQuality.Maximum = new decimal(new int[] {
+            100,
+            0,
+            0,
+            0});
+            this.numQuality.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numQuality.Name = "numQuality";
+            this.numQuality.Size = new System.Drawing.Size(72, 20);
+            this.numQuality.TabIndex = 18;
+            this.numQuality.Value = new decimal(new int[] {
+            70,
+            0,
+            0,
+            0});
+            //
             // Form1
             //
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(615, 326);
+            this.Controls.Add(this.label6);
+            this.Controls.Add(this.numQuality);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.txtAudioDelay);
             this.Controls.Add(this.label4);
@@ -213,6 +249,7 @@
             this.Controls.Add(this.label1);
             this.Name = "Form1";
             this.Text = "Form1";
+            ((System.ComponentModel.ISupportInitialize)(this.numQuality)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -236,6 +273,8 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox txtAudioDelay;
         private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.NumericUpDown numQuality;
     }
 }
 

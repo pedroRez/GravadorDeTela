@@ -17,7 +17,7 @@ namespace GravadorDeTela
     {
         // ===== Configurações padrão =====
         private const int FPS = 30;
-        private const int VIDEO_CRF = 23;
+        private const int VIDEO_QUALITY_PADRAO = 70;
         private const int AUDIO_KBPS = 192;
         private const int PADRAO_SEGUNDOS_WHATSAPP = 120; // padrão se não informado
         private const int MIN_SEGUNDOS_WHATSAPP = 15;
@@ -65,6 +65,7 @@ namespace GravadorDeTela
             txtSegmentacao.Enabled = chkModoWhatsApp.Checked;
             txtStop.Enabled = chkStop.Checked;
             txtAudioDelay.Text = Properties.Settings.Default.AudioDelay.ToString();
+            numQuality.Value = VIDEO_QUALITY_PADRAO;
 
             // Carregar dispositivos de áudio dshow
             Shown += async (s, e) => await CarregarDispositivosAudio();
@@ -440,7 +441,7 @@ namespace GravadorDeTela
                     VideoEncoderOptions = new VideoEncoderOptions
                     {
                         Framerate = FPS,
-                        Quality = VIDEO_CRF
+                        Quality = (int)numQuality.Value
                     }
                 };
 
