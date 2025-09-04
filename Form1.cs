@@ -17,7 +17,7 @@ namespace GravadorDeTela
     {
         // ===== Configurações padrão =====
         private const int FPS = 30;
-        private const int VIDEO_CRF = 23;
+        private const int VIDEO_CRF = 60;
         private const int AUDIO_KBPS = 192;
         private const int PADRAO_SEGUNDOS_WHATSAPP = 120; // padrão se não informado
         private const int MIN_SEGUNDOS_WHATSAPP = 15;
