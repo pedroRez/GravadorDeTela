@@ -46,6 +46,8 @@
             this.label5 = new System.Windows.Forms.Label();
             this.trkQualidade = new System.Windows.Forms.TrackBar();
             this.lblQualidadeValor = new System.Windows.Forms.Label();
+            this.chkMicrofone = new System.Windows.Forms.CheckBox();
+            this.cmbMicrofone = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.trkQualidade)).BeginInit();
             this.SuspendLayout();
             // 
@@ -212,11 +214,31 @@
             this.lblQualidadeValor.TabIndex = 18;
             this.lblQualidadeValor.Text = "Qualidade (1-100): 60";
             //
+            // chkMicrofone
+            //
+            this.chkMicrofone.AutoSize = true;
+            this.chkMicrofone.Location = new System.Drawing.Point(337, 219);
+            this.chkMicrofone.Name = "chkMicrofone";
+            this.chkMicrofone.Size = new System.Drawing.Size(114, 17);
+            this.chkMicrofone.TabIndex = 19;
+            this.chkMicrofone.Text = "Capturar microfone";
+            this.chkMicrofone.UseVisualStyleBackColor = true;
+            //
+            // cmbMicrofone
+            //
+            this.cmbMicrofone.FormattingEnabled = true;
+            this.cmbMicrofone.Location = new System.Drawing.Point(480, 216);
+            this.cmbMicrofone.Name = "cmbMicrofone";
+            this.cmbMicrofone.Size = new System.Drawing.Size(121, 21);
+            this.cmbMicrofone.TabIndex = 20;
+            //
             // Form1
             //
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(615, 326);
+            this.Controls.Add(this.cmbMicrofone);
+            this.Controls.Add(this.chkMicrofone);
             this.Controls.Add(this.lblQualidadeValor);
             this.Controls.Add(this.trkQualidade);
             this.Controls.Add(this.label5);
@@ -263,6 +285,8 @@
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.TrackBar trkQualidade;
         private System.Windows.Forms.Label lblQualidadeValor;
+        private System.Windows.Forms.CheckBox chkMicrofone;
+        private System.Windows.Forms.ComboBox cmbMicrofone;
     }
 }
 
