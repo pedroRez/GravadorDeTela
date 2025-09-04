@@ -44,6 +44,9 @@
             this.label4 = new System.Windows.Forms.Label();
             this.txtAudioDelay = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
+            this.trkQualidade = new System.Windows.Forms.TrackBar();
+            this.lblQualidadeValor = new System.Windows.Forms.Label();
+            ((System.ComponentModel.ISupportInitialize)(this.trkQualidade)).BeginInit();
             this.SuspendLayout();
             // 
             // label1
@@ -190,11 +193,32 @@
             this.label5.TabIndex = 16;
             this.label5.Text = "Atraso do áudio (ms):";
             //
+            // trkQualidade
+            //
+            this.trkQualidade.Location = new System.Drawing.Point(15, 197);
+            this.trkQualidade.Maximum = 28;
+            this.trkQualidade.Minimum = 18;
+            this.trkQualidade.Name = "trkQualidade";
+            this.trkQualidade.Size = new System.Drawing.Size(221, 45);
+            this.trkQualidade.TabIndex = 17;
+            this.trkQualidade.Value = 23;
+            //
+            // lblQualidadeValor
+            //
+            this.lblQualidadeValor.AutoSize = true;
+            this.lblQualidadeValor.Location = new System.Drawing.Point(242, 209);
+            this.lblQualidadeValor.Name = "lblQualidadeValor";
+            this.lblQualidadeValor.Size = new System.Drawing.Size(19, 13);
+            this.lblQualidadeValor.TabIndex = 18;
+            this.lblQualidadeValor.Text = "23";
+            //
             // Form1
             //
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(615, 326);
+            this.Controls.Add(this.lblQualidadeValor);
+            this.Controls.Add(this.trkQualidade);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.txtAudioDelay);
             this.Controls.Add(this.label4);
@@ -213,6 +237,7 @@
             this.Controls.Add(this.label1);
             this.Name = "Form1";
             this.Text = "Form1";
+            ((System.ComponentModel.ISupportInitialize)(this.trkQualidade)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -236,6 +261,8 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox txtAudioDelay;
         private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.TrackBar trkQualidade;
+        private System.Windows.Forms.Label lblQualidadeValor;
     }
 }
 

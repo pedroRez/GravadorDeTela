@@ -17,7 +17,7 @@ namespace GravadorDeTela
     {
         // ===== Configurações padrão =====
         private const int FPS = 30;
-        private const int VIDEO_CRF = 60;
+        private int _videoQualityCrf = 23;
         private const int AUDIO_KBPS = 192;
         private const int PADRAO_SEGUNDOS_WHATSAPP = 120; // padrão se não informado
         private const int MIN_SEGUNDOS_WHATSAPP = 15;
@@ -66,8 +66,18 @@ namespace GravadorDeTela
             txtStop.Enabled = chkStop.Checked;
             txtAudioDelay.Text = Properties.Settings.Default.AudioDelay.ToString();
 
+            trkQualidade.Value = _videoQualityCrf;
+            lblQualidadeValor.Text = _videoQualityCrf.ToString();
+            trkQualidade.Scroll += trkQualidade_Scroll;
+
             // Carregar dispositivos de áudio dshow
             Shown += async (s, e) => await CarregarDispositivosAudio();
+        }
+
+        private void trkQualidade_Scroll(object sender, EventArgs e)
+        {
+            _videoQualityCrf = trkQualidade.Value;
+            lblQualidadeValor.Text = _videoQualityCrf.ToString();
         }
 
         // ==================== UTILITÁRIOS ====================
@@ -440,7 +450,7 @@ namespace GravadorDeTela
                     VideoEncoderOptions = new VideoEncoderOptions
                     {
                         Framerate = FPS,
-                        Quality = VIDEO_CRF
+                        Quality = _videoQualityCrf
                     }
                 };
 
