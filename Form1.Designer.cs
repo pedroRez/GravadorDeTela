@@ -197,7 +197,7 @@
             //
             this.trkQualidade.Location = new System.Drawing.Point(15, 197);
             this.trkQualidade.Maximum = 100;
-            this.trkQualidade.Minimum = 0;
+            this.trkQualidade.Minimum = 1;
             this.trkQualidade.Name = "trkQualidade";
             this.trkQualidade.Size = new System.Drawing.Size(221, 45);
             this.trkQualidade.TabIndex = 17;
@@ -208,9 +208,9 @@
             this.lblQualidadeValor.AutoSize = true;
             this.lblQualidadeValor.Location = new System.Drawing.Point(242, 209);
             this.lblQualidadeValor.Name = "lblQualidadeValor";
-            this.lblQualidadeValor.Size = new System.Drawing.Size(19, 13);
+            this.lblQualidadeValor.Size = new System.Drawing.Size(116, 13);
             this.lblQualidadeValor.TabIndex = 18;
-            this.lblQualidadeValor.Text = "60";
+            this.lblQualidadeValor.Text = "Qualidade (1-100): 60";
             //
             // Form1
             //
