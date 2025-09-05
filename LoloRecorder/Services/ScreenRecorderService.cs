@@ -45,18 +45,37 @@ namespace LoloRecorder.Services
         /// <summary>
         /// Inicia a gravação de tela.
         /// </summary>
-        public Task StartAsync()
+        /// <returns>
+        /// Tupla indicando sucesso e mensagem de erro (quando houver).
+        /// </returns>
+        public Task<(bool Success, string? ErrorMessage)> StartAsync()
         {
             if (_recorder != null)
-                throw new InvalidOperationException("Gravação já iniciada.");
+                return Task.FromResult<(bool, string?)>((false, "Gravação já iniciada."));
 
-            _recordingTcs = new TaskCompletionSource<bool>();
-            _recorder = Recorder.CreateRecorder(_options);
-            _recorder.OnRecordingComplete += (s, e) => _recordingTcs.TrySetResult(true);
+            try
+            {
+                var directory = Path.GetDirectoryName(_outputPath);
+                if (!string.IsNullOrWhiteSpace(directory) && !Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
 
-            // Gravar em arquivo temporário para permitir pós-processamento com ffmpeg
-            _recorder.Record(_outputPath + ".tmp");
-            return Task.CompletedTask;
+                _recordingTcs = new TaskCompletionSource<bool>();
+                _recorder = Recorder.CreateRecorder(_options);
+                _recorder.OnRecordingComplete += (s, e) => _recordingTcs?.TrySetResult(true);
+
+                // Gravar em arquivo temporário para permitir pós-processamento com ffmpeg
+                _recorder.Record(_outputPath + ".tmp");
+                return Task.FromResult<(bool, string?)>((true, null));
+            }
+            catch (Exception ex)
+            {
+                _recorder?.Dispose();
+                _recorder = null;
+                _recordingTcs = null;
+                return Task.FromResult<(bool, string?)>((false, ex.Message));
+            }
         }
 
         /// <summary>
