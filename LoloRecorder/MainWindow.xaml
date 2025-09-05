@@ -30,7 +30,10 @@
     </Window.Resources>
     <Grid Background="{StaticResource Fundo}">
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="200">
-            <ToggleButton x:Name="RecordToggle" Style="{StaticResource ToggleRecordButtonStyle}"/>
+            <ToggleButton x:Name="RecordToggle"
+                          Style="{StaticResource ToggleRecordButtonStyle}"
+                          Checked="RecordToggle_Checked"
+                          Unchecked="RecordToggle_Unchecked"/>
             <ComboBox x:Name="AudioDevicesCombo" Margin="0,5"/>
             <Label x:Name="StatusLabel" Content="Parado" Foreground="{StaticResource Acento}" HorizontalAlignment="Center"/>
         </StackPanel>
