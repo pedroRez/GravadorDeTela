@@ -5,7 +5,7 @@
     <Window.Resources>
         <ResourceDictionary>
             <!-- Global button style -->
-            <Style TargetType="Button">
+            <Style TargetType="ButtonBase">
                 <Setter Property="Background" Value="{StaticResource Acento}"/>
                 <Setter Property="Foreground" Value="White"/>
                 <Setter Property="Padding" Value="10,5"/>
@@ -13,7 +13,7 @@
             </Style>
 
             <!-- Toggle button style for Record/Stop -->
-            <Style x:Key="ToggleRecordButtonStyle" TargetType="ToggleButton" BasedOn="{StaticResource {x:Type Button}}">
+            <Style x:Key="ToggleRecordButtonStyle" TargetType="ToggleButton" BasedOn="{StaticResource {x:Type ButtonBase}}">
                 <Setter Property="Content" Value="Gravar"/>
                 <Style.Triggers>
                     <Trigger Property="IsChecked" Value="True">
