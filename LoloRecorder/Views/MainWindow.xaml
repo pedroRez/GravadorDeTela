@@ -62,6 +62,8 @@
                               Unchecked="RecordToggle_Unchecked"/>
             </StackPanel>
             <ComboBox x:Name="AudioDevicesCombo" Margin="0,5"/>
+            <ToggleButton x:Name="WebcamToggle" Content="Webcam" Margin="0,5" Checked="WebcamToggle_Checked" Unchecked="WebcamToggle_Unchecked"/>
+            <ComboBox x:Name="WebcamDevicesCombo" Margin="0,5" Visibility="Collapsed" DisplayMemberPath="FriendlyName" SelectedValuePath="DeviceName"/>
             <Label x:Name="StatusLabel" Content="Parado" Foreground="{StaticResource Acento}" HorizontalAlignment="Center"/>
         </StackPanel>
     </Grid>

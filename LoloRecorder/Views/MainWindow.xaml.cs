@@ -1,8 +1,10 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using LoloRecorder.Services;
+using ScreenRecorderLib;
 
 namespace LoloRecorder.Views
 {
@@ -28,7 +30,12 @@ namespace LoloRecorder.Views
                     _ => RecordingMode.TelaInteira
                 };
 
-                var (success, error) = await _recorderService.StartAsync(mode);
+                string? webcamDevice = null;
+                if (WebcamToggle.IsChecked == true && WebcamDevicesCombo.SelectedItem is RecordableCamera cam)
+                {
+                    webcamDevice = cam.DeviceName;
+                }
+                var (success, error) = await _recorderService.StartAsync(mode, webcamDevice);
                 if (!success)
                 {
                     StatusLabel.Content = "Erro ao iniciar";
@@ -87,6 +94,20 @@ namespace LoloRecorder.Views
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
             MessageBox.Show("Configurações ainda não implementadas.", "Configurações", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void WebcamToggle_Checked(object sender, RoutedEventArgs e)
+        {
+            var devices = Recorder.GetSystemVideoCaptureDevices().ToList();
+            WebcamDevicesCombo.ItemsSource = devices;
+            WebcamDevicesCombo.Visibility = Visibility.Visible;
+            if (devices.Count > 0)
+                WebcamDevicesCombo.SelectedIndex = 0;
+        }
+
+        private void WebcamToggle_Unchecked(object sender, RoutedEventArgs e)
+        {
+            WebcamDevicesCombo.Visibility = Visibility.Collapsed;
         }
     }
 }
