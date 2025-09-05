@@ -3,7 +3,7 @@ using System.IO;
 using System.Windows;
 using LoloRecorder.Services;
 
-namespace LoloRecorder
+namespace LoloRecorder.Views
 {
     public partial class MainWindow : Window
     {
