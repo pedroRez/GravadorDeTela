@@ -1,7 +1,8 @@
 <Window x:Class="LoloRecorder.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="LoloRecorder" Height="350" Width="525">
+        Title="LoloRecorder" Height="350" Width="525"
+        WindowStyle="None" ResizeMode="NoResize">
     <Window.Resources>
         <ResourceDictionary>
             <!-- Global button style -->
@@ -25,7 +26,30 @@
         </ResourceDictionary>
     </Window.Resources>
     <Grid Background="{StaticResource Fundo}">
-        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="200">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Custom top bar -->
+        <Border Grid.Row="0" Background="{StaticResource Acento}" MouseDown="TopBar_MouseDown">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="LoloRecorder" VerticalAlignment="Center" Margin="10,0" FontWeight="Bold"/>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button x:Name="SettingsButton" Content="⚙" Width="40" Click="SettingsButton_Click"/>
+                    <Button x:Name="MinimizeButton" Content="-" Width="40" Click="MinimizeButton_Click"/>
+                    <Button x:Name="CloseButton" Content="X" Width="40" Click="CloseButton_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Width="200">
             <ToggleButton x:Name="RecordToggle"
                           Style="{StaticResource ToggleRecordButtonStyle}"
                           Checked="RecordToggle_Checked"
