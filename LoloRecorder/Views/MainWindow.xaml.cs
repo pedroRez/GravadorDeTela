@@ -21,7 +21,14 @@ namespace LoloRecorder.Views
         {
             try
             {
-                var (success, error) = await _recorderService.StartAsync();
+                var mode = ModeCombo.SelectedIndex switch
+                {
+                    1 => RecordingMode.Janela,
+                    2 => RecordingMode.Regiao,
+                    _ => RecordingMode.TelaInteira
+                };
+
+                var (success, error) = await _recorderService.StartAsync(mode);
                 if (!success)
                 {
                     StatusLabel.Content = "Erro ao iniciar";

@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using ScreenRecorderLib;
 
@@ -48,7 +49,7 @@ namespace LoloRecorder.Services
         /// <returns>
         /// Tupla indicando sucesso e mensagem de erro (quando houver).
         /// </returns>
-        public Task<(bool Success, string? ErrorMessage)> StartAsync()
+        public Task<(bool Success, string? ErrorMessage)> StartAsync(RecordingMode mode)
         {
             if (_recorder != null)
                 return Task.FromResult<(bool, string?)>((false, "Gravação já iniciada."));
@@ -61,8 +62,34 @@ namespace LoloRecorder.Services
                     Directory.CreateDirectory(directory);
                 }
 
+                var options = _options;
+                switch (mode)
+                {
+                    case RecordingMode.Janela:
+                        options.RecordingSources = new RecordingSourceBase[]
+                        {
+                            new WindowRecordingSource { Handle = GetForegroundWindow() }
+                        };
+                        break;
+                    case RecordingMode.Regiao:
+                        options.RecordingSources = new RecordingSourceBase[]
+                        {
+                            new DisplayRecordingSource
+                            {
+                                SourceRect = new ScreenRect { Left = 0, Top = 0, Right = 800, Bottom = 600 }
+                            }
+                        };
+                        break;
+                    default:
+                        options.RecordingSources = new RecordingSourceBase[]
+                        {
+                            DisplayRecordingSource.MainMonitor
+                        };
+                        break;
+                }
+
                 _recordingTcs = new TaskCompletionSource<bool>();
-                _recorder = Recorder.CreateRecorder(_options);
+                _recorder = Recorder.CreateRecorder(options);
                 _recorder.OnRecordingComplete += (s, e) => _recordingTcs?.TrySetResult(true);
 
                 // Gravar em arquivo temporário para permitir pós-processamento com ffmpeg
@@ -77,6 +104,9 @@ namespace LoloRecorder.Services
                 return Task.FromResult<(bool, string?)>((false, ex.Message));
             }
         }
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetForegroundWindow();
 
         /// <summary>
         /// Interrompe a gravação e, se possível, utiliza ffmpeg para gerar o arquivo final.
