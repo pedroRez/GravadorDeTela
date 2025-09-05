@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Windows;
+using System.Windows.Input;
 using LoloRecorder.Services;
 
 namespace LoloRecorder.Views
@@ -56,6 +57,29 @@ namespace LoloRecorder.Views
         {
             await _recorderService.DisposeAsync();
             base.OnClosed(e);
+        }
+
+        private void TopBar_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Left)
+            {
+                DragMove();
+            }
+        }
+
+        private void MinimizeButton_Click(object sender, RoutedEventArgs e)
+        {
+            SystemCommands.MinimizeWindow(this);
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            SystemCommands.CloseWindow(this);
+        }
+
+        private void SettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Configurações ainda não implementadas.", "Configurações", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 }
