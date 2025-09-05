@@ -20,14 +20,21 @@ namespace LoloRecorder.Views
         {
             try
             {
-                await _recorderService.StartAsync();
+                var (success, error) = await _recorderService.StartAsync();
+                if (!success)
+                {
+                    StatusLabel.Content = "Erro ao iniciar";
+                    RecordToggle.IsChecked = false;
+                    MessageBox.Show(error ?? "Falha desconhecida ao iniciar gravação.", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
                 StatusLabel.Content = "Gravando...";
             }
             catch (Exception ex)
             {
                 StatusLabel.Content = "Erro ao iniciar";
                 RecordToggle.IsChecked = false;
-                MessageBox.Show(ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Falha inesperada ao iniciar a gravação: {ex.Message}", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -41,7 +48,7 @@ namespace LoloRecorder.Views
             catch (Exception ex)
             {
                 StatusLabel.Content = "Erro ao parar";
-                MessageBox.Show(ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Falha inesperada ao encerrar a gravação: {ex.Message}", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
