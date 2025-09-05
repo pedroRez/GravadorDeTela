@@ -39,7 +39,8 @@ namespace LoloRecorder.Services
                 {
                     Framerate = 30,
                     Quality = 60
-                }
+                },
+                OverlayOptions = new OverLayOptions()
             };
         }
 
@@ -49,7 +50,7 @@ namespace LoloRecorder.Services
         /// <returns>
         /// Tupla indicando sucesso e mensagem de erro (quando houver).
         /// </returns>
-        public Task<(bool Success, string? ErrorMessage)> StartAsync(RecordingMode mode)
+        public Task<(bool Success, string? ErrorMessage)> StartAsync(RecordingMode mode, string? webcamDevice = null)
         {
             if (_recorder != null)
                 return Task.FromResult<(bool, string?)>((false, "Gravação já iniciada."));
@@ -63,6 +64,18 @@ namespace LoloRecorder.Services
                 }
 
                 var options = _options;
+                options.OverlayOptions ??= new OverLayOptions();
+                options.OverlayOptions.Overlays.Clear();
+                if (!string.IsNullOrWhiteSpace(webcamDevice))
+                {
+                    options.OverlayOptions.Overlays.Add(new VideoCaptureOverlay
+                    {
+                        DeviceName = webcamDevice,
+                        AnchorPoint = Anchor.BottomRight,
+                        Offset = new ScreenSize(10, 10),
+                        Size = new ScreenSize(0, 200)
+                    });
+                }
                 switch (mode)
                 {
                     case RecordingMode.Janela:
