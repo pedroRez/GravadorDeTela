@@ -71,6 +71,7 @@ namespace GravadorDeTela
             txtStop.Enabled = chkStop.Checked;
             cmbMicrofone.Enabled = chkMicrofone.Checked;
             txtAudioDelay.Text = Properties.Settings.Default.AudioDelay.ToString();
+            numQuality.Value = VIDEO_QUALITY_PADRAO;
 
             trkQualidade.Value = _videoQuality;
             lblQualidadeValor.Text = $"Qualidade (1-100): {_videoQuality}";
