@@ -44,9 +44,11 @@
             this.label4 = new System.Windows.Forms.Label();
             this.txtAudioDelay = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
-            this.label6 = new System.Windows.Forms.Label();
-            this.numQuality = new System.Windows.Forms.NumericUpDown();
-            ((System.ComponentModel.ISupportInitialize)(this.numQuality)).BeginInit();
+            this.trkQualidade = new System.Windows.Forms.TrackBar();
+            this.lblQualidadeValor = new System.Windows.Forms.Label();
+            this.chkMicrofone = new System.Windows.Forms.CheckBox();
+            this.cmbMicrofone = new System.Windows.Forms.ComboBox();
+            ((System.ComponentModel.ISupportInitialize)(this.trkQualidade)).BeginInit();
             this.SuspendLayout();
             // 
             // label1
@@ -193,44 +195,52 @@
             this.label5.TabIndex = 16;
             this.label5.Text = "Atraso do áudio (ms):";
             //
-            // label6
+            // trkQualidade
             //
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(334, 217);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(104, 13);
-            this.label6.TabIndex = 17;
-            this.label6.Text = "Qualidade do vídeo:";
+            this.trkQualidade.Location = new System.Drawing.Point(15, 197);
+            this.trkQualidade.Maximum = 100;
+            this.trkQualidade.Minimum = 1;
+            this.trkQualidade.Name = "trkQualidade";
+            this.trkQualidade.Size = new System.Drawing.Size(221, 45);
+            this.trkQualidade.TabIndex = 17;
+            this.trkQualidade.Value = 60;
             //
-            // numQuality
+            // lblQualidadeValor
             //
-            this.numQuality.Location = new System.Drawing.Point(480, 215);
-            this.numQuality.Maximum = new decimal(new int[] {
-            100,
-            0,
-            0,
-            0});
-            this.numQuality.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.numQuality.Name = "numQuality";
-            this.numQuality.Size = new System.Drawing.Size(72, 20);
-            this.numQuality.TabIndex = 18;
-            this.numQuality.Value = new decimal(new int[] {
-            70,
-            0,
-            0,
-            0});
+            this.lblQualidadeValor.AutoSize = true;
+            this.lblQualidadeValor.Location = new System.Drawing.Point(242, 209);
+            this.lblQualidadeValor.Name = "lblQualidadeValor";
+            this.lblQualidadeValor.Size = new System.Drawing.Size(116, 13);
+            this.lblQualidadeValor.TabIndex = 18;
+            this.lblQualidadeValor.Text = "Qualidade (1-100): 60";
+            //
+            // chkMicrofone
+            //
+            this.chkMicrofone.AutoSize = true;
+            this.chkMicrofone.Location = new System.Drawing.Point(337, 219);
+            this.chkMicrofone.Name = "chkMicrofone";
+            this.chkMicrofone.Size = new System.Drawing.Size(114, 17);
+            this.chkMicrofone.TabIndex = 19;
+            this.chkMicrofone.Text = "Capturar microfone";
+            this.chkMicrofone.UseVisualStyleBackColor = true;
+            //
+            // cmbMicrofone
+            //
+            this.cmbMicrofone.FormattingEnabled = true;
+            this.cmbMicrofone.Location = new System.Drawing.Point(480, 216);
+            this.cmbMicrofone.Name = "cmbMicrofone";
+            this.cmbMicrofone.Size = new System.Drawing.Size(121, 21);
+            this.cmbMicrofone.TabIndex = 20;
             //
             // Form1
             //
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(615, 326);
-            this.Controls.Add(this.label6);
-            this.Controls.Add(this.numQuality);
+            this.Controls.Add(this.cmbMicrofone);
+            this.Controls.Add(this.chkMicrofone);
+            this.Controls.Add(this.lblQualidadeValor);
+            this.Controls.Add(this.trkQualidade);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.txtAudioDelay);
             this.Controls.Add(this.label4);
@@ -249,7 +259,7 @@
             this.Controls.Add(this.label1);
             this.Name = "Form1";
             this.Text = "Form1";
-            ((System.ComponentModel.ISupportInitialize)(this.numQuality)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.trkQualidade)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -273,8 +283,10 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox txtAudioDelay;
         private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.Label label6;
-        private System.Windows.Forms.NumericUpDown numQuality;
+        private System.Windows.Forms.TrackBar trkQualidade;
+        private System.Windows.Forms.Label lblQualidadeValor;
+        private System.Windows.Forms.CheckBox chkMicrofone;
+        private System.Windows.Forms.ComboBox cmbMicrofone;
     }
 }
 

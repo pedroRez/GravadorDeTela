@@ -17,7 +17,7 @@ namespace GravadorDeTela
     {
         // ===== Configurações padrão =====
         private const int FPS = 30;
-        private const int VIDEO_QUALITY_PADRAO = 70;
+        private int _videoQuality = 60;
         private const int AUDIO_KBPS = 192;
         private const int PADRAO_SEGUNDOS_WHATSAPP = 120; // padrão se não informado
         private const int MIN_SEGUNDOS_WHATSAPP = 15;
@@ -60,15 +60,31 @@ namespace GravadorDeTela
                 txtStop.Enabled = chkStop.Checked;
             };
 
+            chkMicrofone.CheckedChanged += (s, e) =>
+            {
+                cmbMicrofone.Enabled = chkMicrofone.Checked;
+            };
+
             // No design da sua imagem esses nomes existem:
-            // chkModoWhatsApp, txtSegmentacao, chkStop, txtStop, cmbAudio
+            // chkModoWhatsApp, txtSegmentacao, chkStop, txtStop, cmbAudio, chkMicrofone, cmbMicrofone
             txtSegmentacao.Enabled = chkModoWhatsApp.Checked;
             txtStop.Enabled = chkStop.Checked;
+            cmbMicrofone.Enabled = chkMicrofone.Checked;
             txtAudioDelay.Text = Properties.Settings.Default.AudioDelay.ToString();
             numQuality.Value = VIDEO_QUALITY_PADRAO;
 
+            trkQualidade.Value = _videoQuality;
+            lblQualidadeValor.Text = $"Qualidade (1-100): {_videoQuality}";
+            trkQualidade.Scroll += trkQualidade_Scroll;
+
             // Carregar dispositivos de áudio dshow
             Shown += async (s, e) => await CarregarDispositivosAudio();
+        }
+
+        private void trkQualidade_Scroll(object sender, EventArgs e)
+        {
+            _videoQuality = trkQualidade.Value;
+            lblQualidadeValor.Text = $"Qualidade (1-100): {_videoQuality}";
         }
 
         // ==================== UTILITÁRIOS ====================
@@ -113,6 +129,8 @@ namespace GravadorDeTela
             lblStatus.Visible = false;
             chkModoWhatsApp.Enabled = true;
             cmbAudio.Enabled = true;
+            chkMicrofone.Enabled = true;
+            cmbMicrofone.Enabled = chkMicrofone.Checked;
             txtSegmentacao.Enabled = chkModoWhatsApp.Checked;
             chkStop.Enabled = true;
             txtStop.Enabled = chkStop.Checked;
@@ -258,6 +276,7 @@ namespace GravadorDeTela
         private async Task CarregarDispositivosAudio()
         {
             cmbAudio.Items.Clear();
+            cmbMicrofone.Items.Clear();
 
             var ffmpeg = GetFfmpegPath();
             if (ffmpeg == null)
@@ -313,7 +332,8 @@ namespace GravadorDeTela
             var nameRx = new Regex("\"([^\"]+)\"\\s*\\((?:audio|áudio)\\)", RegexOptions.IgnoreCase);
             var altRx = new Regex(@"Alternative name\s+""([^""]+)""", RegexOptions.IgnoreCase);
 
-            int pos = 0, found = 0;
+            int pos = 0;
+            var dispositivos = new System.Collections.Generic.List<AudioDeviceItem>();
             while (true)
             {
                 var mName = nameRx.Match(text, pos);
@@ -325,19 +345,32 @@ namespace GravadorDeTela
                 var mAlt = altRx.Match(text, mName.Index);
                 string moniker = mAlt.Success ? mAlt.Groups[1].Value : null;
 
-                cmbAudio.Items.Add(new AudioDeviceItem { DisplayName = display, Moniker = moniker });
-                found++;
+                dispositivos.Add(new AudioDeviceItem { DisplayName = display, Moniker = moniker });
 
                 pos = mAlt.Success ? (mAlt.Index + mAlt.Length) : (mName.Index + mName.Length);
             }
 
-            if (found == 0)
+            if (dispositivos.Count == 0)
             {
                 MessageBox.Show(
-                    "Nenhum dispositivo de captura de ÁUDIO (saída) foi encontrado no DirectShow.\n" +
+                    "Nenhum dispositivo de ÁUDIO foi encontrado no DirectShow.\n" +
                     "Ative 'Mixagem Estéreo' no Realtek ou instale o VB-CABLE/VoiceMeeter.",
                     "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
+            }
+
+            foreach (var d in dispositivos)
+                cmbAudio.Items.Add(d);
+
+            foreach (var d in dispositivos)
+            {
+                var n = d.DisplayName.ToLowerInvariant();
+                if (!(n.Contains("mixagem estéreo") || n.Contains("stereo mix") ||
+                      n.Contains("what u hear") || n.Contains("cable output") ||
+                      n.Contains("voicemeeter output")))
+                {
+                    cmbMicrofone.Items.Add(d);
+                }
             }
 
             // Seleciona automaticamente o mais provável (stereo mix / cable / voicemeeter)
@@ -353,6 +386,22 @@ namespace GravadorDeTela
                 }
             }
             cmbAudio.SelectedIndex = preferred >= 0 ? preferred : 0;
+
+            // Seleciona automaticamente o primeiro microfone conhecido, se houver
+            int preferredMic = -1;
+            for (int i = 0; i < cmbMicrofone.Items.Count; i++)
+            {
+                var n = ((AudioDeviceItem)cmbMicrofone.Items[i]).DisplayName.ToLowerInvariant();
+                if (n.Contains("microfone") || n.Contains("microphone") || n.Contains("mic"))
+                {
+                    preferredMic = i; break;
+                }
+            }
+            if (cmbMicrofone.Items.Count > 0)
+                cmbMicrofone.SelectedIndex = preferredMic >= 0 ? preferredMic : 0;
+
+            chkMicrofone.Enabled = cmbMicrofone.Items.Count > 0;
+            cmbMicrofone.Enabled = chkMicrofone.Enabled && chkMicrofone.Checked;
         }
 
 
@@ -375,14 +424,27 @@ namespace GravadorDeTela
         {
             try
             {
-                // valida dispositivo de áudio
+                // valida dispositivo de áudio (saída)
                 if (cmbAudio.SelectedItem == null)
                 {
-                    MessageBox.Show("Selecione um dispositivo de ÁUDIO no combo antes de iniciar.",
+                    MessageBox.Show("Selecione um dispositivo de ÁUDIO de saída no combo antes de iniciar.",
                         "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
                 var dev = (AudioDeviceItem)cmbAudio.SelectedItem;
+
+                // valida microfone (se habilitado)
+                AudioDeviceItem mic = null;
+                if (chkMicrofone.Checked)
+                {
+                    if (cmbMicrofone.SelectedItem == null)
+                    {
+                        MessageBox.Show("Selecione um microfone no combo antes de iniciar.",
+                            "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                    mic = (AudioDeviceItem)cmbMicrofone.SelectedItem;
+                }
 
                 // valida segmentação (se WhatsApp marcado)
                 int segmentSeconds = PADRAO_SEGUNDOS_WHATSAPP;
@@ -431,17 +493,21 @@ namespace GravadorDeTela
 
                 _pastaDaGravacaoAtual = CriarDiretorioGravavel();
 
+                var audioOpts = new AudioOptions
+                {
+                    IsAudioEnabled = true,
+                    AudioOutputDevice = dev.DisplayName
+                };
+                if (mic != null)
+                    audioOpts.AudioInputDevice = mic.DisplayName;
+
                 var options = new RecorderOptions
                 {
-                    AudioOptions = new AudioOptions
-                    {
-                        IsAudioEnabled = true,
-                        AudioOutputDevice = dev.DisplayName
-                    },
+                    AudioOptions = audioOpts,
                     VideoEncoderOptions = new VideoEncoderOptions
                     {
                         Framerate = FPS,
-                        Quality = (int)numQuality.Value
+                        Quality = _videoQuality
                     }
                 };
 
@@ -515,6 +581,8 @@ namespace GravadorDeTela
                 btnParar.Enabled = true;
                 chkModoWhatsApp.Enabled = false;
                 cmbAudio.Enabled = false;
+                chkMicrofone.Enabled = false;
+                cmbMicrofone.Enabled = false;
                 chkStop.Enabled = false;
                 txtStop.Enabled = false;
                 txtSegmentacao.Enabled = false;
