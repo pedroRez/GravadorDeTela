@@ -39,8 +39,8 @@
             this.txtSegmentacao = new System.Windows.Forms.TextBox();
             this.txtStop = new System.Windows.Forms.TextBox();
             this.chkStop = new System.Windows.Forms.CheckBox();
+            this.chkAudioSistema = new System.Windows.Forms.CheckBox();
             this.cmbAudio = new System.Windows.Forms.ComboBox();
-            this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.txtAudioDelay = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
@@ -143,7 +143,7 @@
             this.txtStop.TabIndex = 9;
             // 
             // chkStop
-            // 
+            //
             this.chkStop.AutoSize = true;
             this.chkStop.Location = new System.Drawing.Point(11, 293);
             this.chkStop.Name = "chkStop";
@@ -151,23 +151,26 @@
             this.chkStop.TabIndex = 11;
             this.chkStop.Text = "Programar Stop(minutos):";
             this.chkStop.UseVisualStyleBackColor = true;
-            // 
+            //
+            // chkAudioSistema
+            //
+            this.chkAudioSistema.AutoSize = true;
+            this.chkAudioSistema.Checked = true;
+            this.chkAudioSistema.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkAudioSistema.Location = new System.Drawing.Point(337, 243);
+            this.chkAudioSistema.Name = "chkAudioSistema";
+            this.chkAudioSistema.Size = new System.Drawing.Size(135, 17);
+            this.chkAudioSistema.TabIndex = 12;
+            this.chkAudioSistema.Text = "Capturar som do sistema";
+            this.chkAudioSistema.UseVisualStyleBackColor = true;
+            //
             // cmbAudio
-            // 
+            //
             this.cmbAudio.FormattingEnabled = true;
             this.cmbAudio.Location = new System.Drawing.Point(480, 240);
             this.cmbAudio.Name = "cmbAudio";
             this.cmbAudio.Size = new System.Drawing.Size(121, 21);
-            this.cmbAudio.TabIndex = 12;
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(334, 243);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(140, 13);
-            this.label3.TabIndex = 13;
-            this.label3.Text = "Escolha o audio de captura:";
+            this.cmbAudio.TabIndex = 13;
             // 
             // label4
             //
@@ -244,7 +247,7 @@
             this.Controls.Add(this.label5);
             this.Controls.Add(this.txtAudioDelay);
             this.Controls.Add(this.label4);
-            this.Controls.Add(this.label3);
+            this.Controls.Add(this.chkAudioSistema);
             this.Controls.Add(this.cmbAudio);
             this.Controls.Add(this.chkStop);
             this.Controls.Add(this.txtStop);
@@ -278,8 +281,8 @@
         private System.Windows.Forms.TextBox txtSegmentacao;
         private System.Windows.Forms.TextBox txtStop;
         private System.Windows.Forms.CheckBox chkStop;
+        private System.Windows.Forms.CheckBox chkAudioSistema;
         private System.Windows.Forms.ComboBox cmbAudio;
-        private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox txtAudioDelay;
         private System.Windows.Forms.Label label5;
