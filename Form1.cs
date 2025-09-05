@@ -60,15 +60,22 @@ namespace GravadorDeTela
                 txtStop.Enabled = chkStop.Checked;
             };
 
+            chkAudioSistema.CheckedChanged += (s, e) =>
+            {
+                cmbAudio.Enabled = chkAudioSistema.Checked;
+            };
+
             chkMicrofone.CheckedChanged += (s, e) =>
             {
                 cmbMicrofone.Enabled = chkMicrofone.Checked;
             };
 
             // No design da sua imagem esses nomes existem:
-            // chkModoWhatsApp, txtSegmentacao, chkStop, txtStop, cmbAudio, chkMicrofone, cmbMicrofone
+            // chkModoWhatsApp, txtSegmentacao, chkStop, txtStop,
+            // chkAudioSistema, cmbAudio, chkMicrofone, cmbMicrofone
             txtSegmentacao.Enabled = chkModoWhatsApp.Checked;
             txtStop.Enabled = chkStop.Checked;
+            cmbAudio.Enabled = chkAudioSistema.Checked;
             cmbMicrofone.Enabled = chkMicrofone.Checked;
             txtAudioDelay.Text = Properties.Settings.Default.AudioDelay.ToString();
             trkQualidade.Value = _videoQuality;
@@ -126,9 +133,10 @@ namespace GravadorDeTela
             progressBar1.Visible = false;
             lblStatus.Visible = false;
             chkModoWhatsApp.Enabled = true;
-            cmbAudio.Enabled = true;
-            chkMicrofone.Enabled = true;
-            cmbMicrofone.Enabled = chkMicrofone.Checked;
+            chkAudioSistema.Enabled = cmbAudio.Items.Count > 0;
+            cmbAudio.Enabled = chkAudioSistema.Enabled && chkAudioSistema.Checked;
+            chkMicrofone.Enabled = cmbMicrofone.Items.Count > 0;
+            cmbMicrofone.Enabled = chkMicrofone.Enabled && chkMicrofone.Checked;
             txtSegmentacao.Enabled = chkModoWhatsApp.Checked;
             chkStop.Enabled = true;
             txtStop.Enabled = chkStop.Checked;
@@ -358,47 +366,56 @@ namespace GravadorDeTela
             }
 
             foreach (var d in dispositivos)
-                cmbAudio.Items.Add(d);
-
-            foreach (var d in dispositivos)
             {
                 var n = d.DisplayName.ToLowerInvariant();
-                if (!(n.Contains("mixagem estéreo") || n.Contains("stereo mix") ||
-                      n.Contains("what u hear") || n.Contains("cable output") ||
-                      n.Contains("voicemeeter output")))
+                if (n.Contains("microfone") || n.Contains("microphone") || n.Contains("mic"))
                 {
                     cmbMicrofone.Items.Add(d);
+                }
+                else
+                {
+                    cmbAudio.Items.Add(d);
                 }
             }
 
             // Seleciona automaticamente o mais provável (stereo mix / cable / voicemeeter)
-            int preferred = -1;
-            for (int i = 0; i < cmbAudio.Items.Count; i++)
+            if (cmbAudio.Items.Count > 0)
             {
-                var n = ((AudioDeviceItem)cmbAudio.Items[i]).DisplayName.ToLowerInvariant();
-                if (n.Contains("mixagem estéreo") || n.Contains("stereo mix") ||
-                    n.Contains("what u hear") || n.Contains("cable output") ||
-                    n.Contains("voicemeeter output"))
+                int preferred = -1;
+                for (int i = 0; i < cmbAudio.Items.Count; i++)
                 {
-                    preferred = i; break;
+                    var n = ((AudioDeviceItem)cmbAudio.Items[i]).DisplayName.ToLowerInvariant();
+                    if (n.Contains("mixagem estéreo") || n.Contains("stereo mix") ||
+                        n.Contains("what u hear") || n.Contains("cable output") ||
+                        n.Contains("voicemeeter output"))
+                    {
+                        preferred = i; break;
+                    }
                 }
+                cmbAudio.SelectedIndex = preferred >= 0 ? preferred : 0;
             }
-            cmbAudio.SelectedIndex = preferred >= 0 ? preferred : 0;
 
             // Seleciona automaticamente o primeiro microfone conhecido, se houver
-            int preferredMic = -1;
-            for (int i = 0; i < cmbMicrofone.Items.Count; i++)
-            {
-                var n = ((AudioDeviceItem)cmbMicrofone.Items[i]).DisplayName.ToLowerInvariant();
-                if (n.Contains("microfone") || n.Contains("microphone") || n.Contains("mic"))
-                {
-                    preferredMic = i; break;
-                }
-            }
             if (cmbMicrofone.Items.Count > 0)
+            {
+                int preferredMic = -1;
+                for (int i = 0; i < cmbMicrofone.Items.Count; i++)
+                {
+                    var n = ((AudioDeviceItem)cmbMicrofone.Items[i]).DisplayName.ToLowerInvariant();
+                    if (n.Contains("microfone") || n.Contains("microphone") || n.Contains("mic"))
+                    {
+                        preferredMic = i; break;
+                    }
+                }
                 cmbMicrofone.SelectedIndex = preferredMic >= 0 ? preferredMic : 0;
+            }
+
+            chkAudioSistema.Enabled = cmbAudio.Items.Count > 0;
+            if (!chkAudioSistema.Enabled) chkAudioSistema.Checked = false;
+            cmbAudio.Enabled = chkAudioSistema.Enabled && chkAudioSistema.Checked;
 
             chkMicrofone.Enabled = cmbMicrofone.Items.Count > 0;
+            if (!chkMicrofone.Enabled) chkMicrofone.Checked = false;
             cmbMicrofone.Enabled = chkMicrofone.Enabled && chkMicrofone.Checked;
         }
 
@@ -423,13 +440,17 @@ namespace GravadorDeTela
             try
             {
                 // valida dispositivo de áudio (saída)
-                if (cmbAudio.SelectedItem == null)
+                AudioDeviceItem dev = null;
+                if (chkAudioSistema.Checked)
                 {
-                    MessageBox.Show("Selecione um dispositivo de ÁUDIO de saída no combo antes de iniciar.",
-                        "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
+                    if (cmbAudio.SelectedItem == null)
+                    {
+                        MessageBox.Show("Selecione um dispositivo de ÁUDIO de saída no combo antes de iniciar.",
+                            "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                    dev = (AudioDeviceItem)cmbAudio.SelectedItem;
                 }
-                var dev = (AudioDeviceItem)cmbAudio.SelectedItem;
 
                 // valida microfone (se habilitado)
                 AudioDeviceItem mic = null;
@@ -493,10 +514,11 @@ namespace GravadorDeTela
 
                 var audioOpts = new AudioOptions
                 {
-                    IsAudioEnabled = true,
-                    AudioOutputDevice = dev.DisplayName
+                    IsAudioEnabled = chkAudioSistema.Checked || chkMicrofone.Checked
                 };
-                if (mic != null)
+                if (chkAudioSistema.Checked && dev != null)
+                    audioOpts.AudioOutputDevice = dev.DisplayName;
+                if (chkMicrofone.Checked && mic != null)
                     audioOpts.AudioInputDevice = mic.DisplayName;
 
                 var options = new RecorderOptions
@@ -578,6 +600,7 @@ namespace GravadorDeTela
                 btnIniciar.Enabled = false;
                 btnParar.Enabled = true;
                 chkModoWhatsApp.Enabled = false;
+                chkAudioSistema.Enabled = false;
                 cmbAudio.Enabled = false;
                 chkMicrofone.Enabled = false;
                 cmbMicrofone.Enabled = false;
