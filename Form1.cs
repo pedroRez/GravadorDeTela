@@ -16,8 +16,8 @@ namespace GravadorDeTela
     public partial class Form1 : Form
     {
         // ===== Configurações padrão =====
-        private const int FPS = 30;
-        private int _videoQuality = 60;
+        private int _fps = 30;
+        private int _videoQuality = 50;
         private const int AUDIO_KBPS = 192;
         private const int PADRAO_SEGUNDOS_WHATSAPP = 120; // padrão se não informado
         private const int MIN_SEGUNDOS_WHATSAPP = 15;
@@ -30,6 +30,7 @@ namespace GravadorDeTela
         private CancellationTokenSource _stopAutoCts;
         private Recorder _recorder;
         private WinFormsTimer _segmentTimer;
+        private WinFormsTimer _clockTimer;
         private int _segmentIndex;
         private int _audioDelayMs;
 
@@ -78,19 +79,41 @@ namespace GravadorDeTela
             cmbAudio.Enabled = chkAudioSistema.Checked;
             cmbMicrofone.Enabled = chkMicrofone.Checked;
             txtAudioDelay.Text = Properties.Settings.Default.AudioDelay.ToString();
-            trkQualidade.Value = _videoQuality;
-            lblQualidadeValor.Text = $"Qualidade (1-100): {_videoQuality}";
-            trkQualidade.Scroll += trkQualidade_Scroll;
             txtPastaSaida.Text = Properties.Settings.Default.OutputFolder;
+
+            // Combos de FPS e Qualidade
+            cmbFps.Items.AddRange(new object[] { 15, 30, 60 });
+            cmbFps.SelectedItem = _fps;
+            cmbFps.SelectedIndexChanged += (s, e) =>
+            {
+                _fps = (int)cmbFps.SelectedItem;
+                tslFps.Text = $"FPS: {_fps}";
+            };
+
+            cmbQualidade.Items.AddRange(new object[] { 25, 50, 80 });
+            cmbQualidade.SelectedItem = _videoQuality;
+            cmbQualidade.SelectedIndexChanged += (s, e) =>
+            {
+                _videoQuality = (int)cmbQualidade.SelectedItem;
+                tslQualidade.Text = $"Qualidade: {_videoQuality}";
+            };
+
+            // Status strip inicial
+            tslFps.Text = $"FPS: {_fps}";
+            tslQualidade.Text = $"Qualidade: {_videoQuality}";
+            tslDiretorio.Text = $"Saída: {txtPastaSaida.Text}";
+            tslAtalhos.Text = "F8 Iniciar | F9 Parar";
+
+            _clockTimer = new WinFormsTimer { Interval = 1000 };
+            _clockTimer.Tick += (s, e) => tslTempo.Text = DateTime.Now.ToString("HH:mm:ss");
+            _clockTimer.Start();
+
+            // Captura de teclas de atalho
+            this.KeyPreview = true;
+            this.KeyDown += Form1_KeyDown;
 
             // Carregar dispositivos de áudio dshow
             Shown += async (s, e) => await CarregarDispositivosAudio();
-        }
-
-        private void trkQualidade_Scroll(object sender, EventArgs e)
-        {
-            _videoQuality = trkQualidade.Value;
-            lblQualidadeValor.Text = $"Qualidade (1-100): {_videoQuality}";
         }
 
         // ==================== UTILITÁRIOS ====================
@@ -453,7 +476,20 @@ namespace GravadorDeTela
                     Properties.Settings.Default.OutputFolder = dlg.SelectedPath;
                     Properties.Settings.Default.Save();
                     txtPastaSaida.Text = dlg.SelectedPath;
+                    tslDiretorio.Text = $"Saída: {txtPastaSaida.Text}";
                 }
+            }
+        }
+
+        private void Form1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.F8 && btnIniciar.Enabled)
+            {
+                btnIniciar.PerformClick();
+            }
+            else if (e.KeyCode == Keys.F9 && btnParar.Enabled)
+            {
+                btnParar.PerformClick();
             }
         }
 
@@ -548,7 +584,7 @@ namespace GravadorDeTela
                     AudioOptions = audioOpts,
                     VideoEncoderOptions = new VideoEncoderOptions
                     {
-                        Framerate = FPS,
+                        Framerate = _fps,
                         Quality = _videoQuality
                     },
                     MouseOptions = new MouseOptions
