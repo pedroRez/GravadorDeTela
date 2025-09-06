@@ -25,6 +25,8 @@ namespace LoloRecorder.Services
         private int _segmentIndex = 1;
         private int _splitSeconds;
         private string _currentOutputPath = string.Empty;
+        public bool IsPaused { get; private set; }
+        public bool IsRecording => _recorder != null;
 
         /// <summary>
         /// Cria uma nova instância do serviço.
@@ -160,6 +162,23 @@ namespace LoloRecorder.Services
             _stopAfterCts?.Cancel();
             _stopAfterCts = null;
             await StopCurrentSegmentAsync();
+            IsPaused = false;
+        }
+
+        public void Pause()
+        {
+            if (_recorder == null || IsPaused)
+                return;
+            _recorder.Pause();
+            IsPaused = true;
+        }
+
+        public void Resume()
+        {
+            if (_recorder == null || !IsPaused)
+                return;
+            _recorder.Resume();
+            IsPaused = false;
         }
 
         private void StartRecorder(string path)
