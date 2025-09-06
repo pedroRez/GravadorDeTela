@@ -48,6 +48,10 @@
             this.lblQualidadeValor = new System.Windows.Forms.Label();
             this.chkMicrofone = new System.Windows.Forms.CheckBox();
             this.cmbMicrofone = new System.Windows.Forms.ComboBox();
+            this.chkMostrarCursor = new System.Windows.Forms.CheckBox();
+            this.txtPastaSaida = new System.Windows.Forms.TextBox();
+            this.btnPastaSaida = new System.Windows.Forms.Button();
+            this.label6 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.trkQualidade)).BeginInit();
             this.SuspendLayout();
             // 
@@ -235,11 +239,54 @@
             this.cmbMicrofone.Size = new System.Drawing.Size(121, 21);
             this.cmbMicrofone.TabIndex = 20;
             //
+            // chkMostrarCursor
+            //
+            this.chkMostrarCursor.AutoSize = true;
+            this.chkMostrarCursor.Checked = true;
+            this.chkMostrarCursor.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkMostrarCursor.Location = new System.Drawing.Point(337, 195);
+            this.chkMostrarCursor.Name = "chkMostrarCursor";
+            this.chkMostrarCursor.Size = new System.Drawing.Size(96, 17);
+            this.chkMostrarCursor.TabIndex = 21;
+            this.chkMostrarCursor.Text = "Mostrar cursor";
+            this.chkMostrarCursor.UseVisualStyleBackColor = true;
+            //
+            // label6
+            //
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(12, 183);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(79, 13);
+            this.label6.TabIndex = 22;
+            this.label6.Text = "Pasta de saída:";
+            //
+            // txtPastaSaida
+            //
+            this.txtPastaSaida.Location = new System.Drawing.Point(97, 180);
+            this.txtPastaSaida.Name = "txtPastaSaida";
+            this.txtPastaSaida.ReadOnly = true;
+            this.txtPastaSaida.Size = new System.Drawing.Size(270, 20);
+            this.txtPastaSaida.TabIndex = 23;
+            //
+            // btnPastaSaida
+            //
+            this.btnPastaSaida.Location = new System.Drawing.Point(373, 178);
+            this.btnPastaSaida.Name = "btnPastaSaida";
+            this.btnPastaSaida.Size = new System.Drawing.Size(85, 23);
+            this.btnPastaSaida.TabIndex = 24;
+            this.btnPastaSaida.Text = "Escolher...";
+            this.btnPastaSaida.UseVisualStyleBackColor = true;
+            this.btnPastaSaida.Click += new System.EventHandler(this.btnPastaSaida_Click);
+            //
             // Form1
             //
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(615, 326);
+            this.Controls.Add(this.btnPastaSaida);
+            this.Controls.Add(this.txtPastaSaida);
+            this.Controls.Add(this.label6);
+            this.Controls.Add(this.chkMostrarCursor);
             this.Controls.Add(this.cmbMicrofone);
             this.Controls.Add(this.chkMicrofone);
             this.Controls.Add(this.lblQualidadeValor);
@@ -290,6 +337,10 @@
         private System.Windows.Forms.Label lblQualidadeValor;
         private System.Windows.Forms.CheckBox chkMicrofone;
         private System.Windows.Forms.ComboBox cmbMicrofone;
+        private System.Windows.Forms.CheckBox chkMostrarCursor;
+        private System.Windows.Forms.TextBox txtPastaSaida;
+        private System.Windows.Forms.Button btnPastaSaida;
+        private System.Windows.Forms.Label label6;
     }
 }
 

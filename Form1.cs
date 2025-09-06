@@ -81,6 +81,7 @@ namespace GravadorDeTela
             trkQualidade.Value = _videoQuality;
             lblQualidadeValor.Text = $"Qualidade (1-100): {_videoQuality}";
             trkQualidade.Scroll += trkQualidade_Scroll;
+            txtPastaSaida.Text = Properties.Settings.Default.OutputFolder;
 
             // Carregar dispositivos de áudio dshow
             Shown += async (s, e) => await CarregarDispositivosAudio();
@@ -145,8 +146,12 @@ namespace GravadorDeTela
 
         private string CriarDiretorioGravavel()
         {
-            var baseVideos = Environment.GetFolderPath(Environment.SpecialFolder.MyVideos);
-            var raiz = Path.Combine(baseVideos, "GravadorDeTela");
+            var raiz = Properties.Settings.Default.OutputFolder;
+            if (string.IsNullOrWhiteSpace(raiz) || !Directory.Exists(raiz))
+            {
+                var baseVideos = Environment.GetFolderPath(Environment.SpecialFolder.MyVideos);
+                raiz = Path.Combine(baseVideos, "GravadorDeTela");
+            }
             Directory.CreateDirectory(raiz);
             string nome = $"Gravacao_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}";
             var destino = Path.Combine(raiz, nome);
@@ -435,6 +440,23 @@ namespace GravadorDeTela
             }
         }
 
+        private void btnPastaSaida_Click(object sender, EventArgs e)
+        {
+            using (var dlg = new FolderBrowserDialog())
+            {
+                dlg.Description = "Selecione a pasta de saída";
+                dlg.SelectedPath = string.IsNullOrWhiteSpace(Properties.Settings.Default.OutputFolder)
+                    ? Environment.GetFolderPath(Environment.SpecialFolder.MyVideos)
+                    : Properties.Settings.Default.OutputFolder;
+                if (dlg.ShowDialog() == DialogResult.OK)
+                {
+                    Properties.Settings.Default.OutputFolder = dlg.SelectedPath;
+                    Properties.Settings.Default.Save();
+                    txtPastaSaida.Text = dlg.SelectedPath;
+                }
+            }
+        }
+
         private void btnIniciar_Click(object sender, EventArgs e)
         {
             try
@@ -528,6 +550,10 @@ namespace GravadorDeTela
                     {
                         Framerate = FPS,
                         Quality = _videoQuality
+                    },
+                    MouseOptions = new MouseOptions
+                    {
+                        IsMousePointerEnabled = chkMostrarCursor.Checked
                     }
                 };
 
