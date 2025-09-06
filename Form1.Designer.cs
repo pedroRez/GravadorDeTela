@@ -44,15 +44,23 @@
             this.label4 = new System.Windows.Forms.Label();
             this.txtAudioDelay = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
-            this.trkQualidade = new System.Windows.Forms.TrackBar();
-            this.lblQualidadeValor = new System.Windows.Forms.Label();
+            this.labelQualidade = new System.Windows.Forms.Label();
+            this.cmbQualidade = new System.Windows.Forms.ComboBox();
+            this.labelFps = new System.Windows.Forms.Label();
+            this.cmbFps = new System.Windows.Forms.ComboBox();
             this.chkMicrofone = new System.Windows.Forms.CheckBox();
             this.cmbMicrofone = new System.Windows.Forms.ComboBox();
             this.chkMostrarCursor = new System.Windows.Forms.CheckBox();
             this.txtPastaSaida = new System.Windows.Forms.TextBox();
             this.btnPastaSaida = new System.Windows.Forms.Button();
             this.label6 = new System.Windows.Forms.Label();
-            ((System.ComponentModel.ISupportInitialize)(this.trkQualidade)).BeginInit();
+            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.tslTempo = new System.Windows.Forms.ToolStripStatusLabel();
+            this.tslFps = new System.Windows.Forms.ToolStripStatusLabel();
+            this.tslQualidade = new System.Windows.Forms.ToolStripStatusLabel();
+            this.tslDiretorio = new System.Windows.Forms.ToolStripStatusLabel();
+            this.tslAtalhos = new System.Windows.Forms.ToolStripStatusLabel();
+            this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // label1
@@ -202,24 +210,41 @@
             this.label5.TabIndex = 16;
             this.label5.Text = "Atraso do áudio (ms):";
             //
-            // trkQualidade
+            // labelQualidade
             //
-            this.trkQualidade.Location = new System.Drawing.Point(15, 197);
-            this.trkQualidade.Maximum = 100;
-            this.trkQualidade.Minimum = 1;
-            this.trkQualidade.Name = "trkQualidade";
-            this.trkQualidade.Size = new System.Drawing.Size(221, 45);
-            this.trkQualidade.TabIndex = 17;
-            this.trkQualidade.Value = 60;
+            this.labelQualidade.AutoSize = true;
+            this.labelQualidade.Location = new System.Drawing.Point(15, 200);
+            this.labelQualidade.Name = "labelQualidade";
+            this.labelQualidade.Size = new System.Drawing.Size(56, 13);
+            this.labelQualidade.TabIndex = 17;
+            this.labelQualidade.Text = "Qualidade:";
             //
-            // lblQualidadeValor
+            // cmbQualidade
             //
-            this.lblQualidadeValor.AutoSize = true;
-            this.lblQualidadeValor.Location = new System.Drawing.Point(242, 209);
-            this.lblQualidadeValor.Name = "lblQualidadeValor";
-            this.lblQualidadeValor.Size = new System.Drawing.Size(116, 13);
-            this.lblQualidadeValor.TabIndex = 18;
-            this.lblQualidadeValor.Text = "Qualidade (1-100): 60";
+            this.cmbQualidade.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbQualidade.FormattingEnabled = true;
+            this.cmbQualidade.Location = new System.Drawing.Point(77, 197);
+            this.cmbQualidade.Name = "cmbQualidade";
+            this.cmbQualidade.Size = new System.Drawing.Size(60, 21);
+            this.cmbQualidade.TabIndex = 18;
+            //
+            // labelFps
+            //
+            this.labelFps.AutoSize = true;
+            this.labelFps.Location = new System.Drawing.Point(143, 200);
+            this.labelFps.Name = "labelFps";
+            this.labelFps.Size = new System.Drawing.Size(29, 13);
+            this.labelFps.TabIndex = 19;
+            this.labelFps.Text = "FPS:";
+            //
+            // cmbFps
+            //
+            this.cmbFps.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbFps.FormattingEnabled = true;
+            this.cmbFps.Location = new System.Drawing.Point(178, 197);
+            this.cmbFps.Name = "cmbFps";
+            this.cmbFps.Size = new System.Drawing.Size(58, 21);
+            this.cmbFps.TabIndex = 20;
             //
             // chkMicrofone
             //
@@ -227,7 +252,7 @@
             this.chkMicrofone.Location = new System.Drawing.Point(337, 219);
             this.chkMicrofone.Name = "chkMicrofone";
             this.chkMicrofone.Size = new System.Drawing.Size(114, 17);
-            this.chkMicrofone.TabIndex = 19;
+            this.chkMicrofone.TabIndex = 21;
             this.chkMicrofone.Text = "Capturar microfone";
             this.chkMicrofone.UseVisualStyleBackColor = true;
             //
@@ -237,7 +262,7 @@
             this.cmbMicrofone.Location = new System.Drawing.Point(480, 216);
             this.cmbMicrofone.Name = "cmbMicrofone";
             this.cmbMicrofone.Size = new System.Drawing.Size(121, 21);
-            this.cmbMicrofone.TabIndex = 20;
+            this.cmbMicrofone.TabIndex = 22;
             //
             // chkMostrarCursor
             //
@@ -247,7 +272,7 @@
             this.chkMostrarCursor.Location = new System.Drawing.Point(337, 195);
             this.chkMostrarCursor.Name = "chkMostrarCursor";
             this.chkMostrarCursor.Size = new System.Drawing.Size(96, 17);
-            this.chkMostrarCursor.TabIndex = 21;
+            this.chkMostrarCursor.TabIndex = 23;
             this.chkMostrarCursor.Text = "Mostrar cursor";
             this.chkMostrarCursor.UseVisualStyleBackColor = true;
             //
@@ -257,7 +282,7 @@
             this.label6.Location = new System.Drawing.Point(12, 183);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(79, 13);
-            this.label6.TabIndex = 22;
+            this.label6.TabIndex = 24;
             this.label6.Text = "Pasta de saída:";
             //
             // txtPastaSaida
@@ -266,31 +291,78 @@
             this.txtPastaSaida.Name = "txtPastaSaida";
             this.txtPastaSaida.ReadOnly = true;
             this.txtPastaSaida.Size = new System.Drawing.Size(270, 20);
-            this.txtPastaSaida.TabIndex = 23;
+            this.txtPastaSaida.TabIndex = 25;
             //
             // btnPastaSaida
             //
             this.btnPastaSaida.Location = new System.Drawing.Point(373, 178);
             this.btnPastaSaida.Name = "btnPastaSaida";
             this.btnPastaSaida.Size = new System.Drawing.Size(85, 23);
-            this.btnPastaSaida.TabIndex = 24;
+            this.btnPastaSaida.TabIndex = 26;
             this.btnPastaSaida.Text = "Escolher...";
             this.btnPastaSaida.UseVisualStyleBackColor = true;
             this.btnPastaSaida.Click += new System.EventHandler(this.btnPastaSaida_Click);
+            //
+            // statusStrip1
+            //
+            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.tslTempo,
+            this.tslFps,
+            this.tslQualidade,
+            this.tslDiretorio,
+            this.tslAtalhos});
+            this.statusStrip1.Location = new System.Drawing.Point(0, 304);
+            this.statusStrip1.Name = "statusStrip1";
+            this.statusStrip1.Size = new System.Drawing.Size(615, 22);
+            this.statusStrip1.TabIndex = 27;
+            this.statusStrip1.Text = "statusStrip1";
+            //
+            // tslTempo
+            //
+            this.tslTempo.Name = "tslTempo";
+            this.tslTempo.Size = new System.Drawing.Size(42, 17);
+            this.tslTempo.Text = "Tempo";
+            //
+            // tslFps
+            //
+            this.tslFps.Name = "tslFps";
+            this.tslFps.Size = new System.Drawing.Size(28, 17);
+            this.tslFps.Text = "FPS";
+            //
+            // tslQualidade
+            //
+            this.tslQualidade.Name = "tslQualidade";
+            this.tslQualidade.Size = new System.Drawing.Size(64, 17);
+            this.tslQualidade.Text = "Qualidade";
+            //
+            // tslDiretorio
+            //
+            this.tslDiretorio.Name = "tslDiretorio";
+            this.tslDiretorio.Size = new System.Drawing.Size(53, 17);
+            this.tslDiretorio.Text = "Diretório";
+            //
+            // tslAtalhos
+            //
+            this.tslAtalhos.Name = "tslAtalhos";
+            this.tslAtalhos.Size = new System.Drawing.Size(50, 17);
+            this.tslAtalhos.Text = "Atalhos";
             //
             // Form1
             //
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(615, 326);
+            this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.btnPastaSaida);
             this.Controls.Add(this.txtPastaSaida);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.chkMostrarCursor);
             this.Controls.Add(this.cmbMicrofone);
             this.Controls.Add(this.chkMicrofone);
-            this.Controls.Add(this.lblQualidadeValor);
-            this.Controls.Add(this.trkQualidade);
+            this.Controls.Add(this.cmbFps);
+            this.Controls.Add(this.labelFps);
+            this.Controls.Add(this.cmbQualidade);
+            this.Controls.Add(this.labelQualidade);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.txtAudioDelay);
             this.Controls.Add(this.label4);
@@ -309,7 +381,8 @@
             this.Controls.Add(this.label1);
             this.Name = "Form1";
             this.Text = "Form1";
-            ((System.ComponentModel.ISupportInitialize)(this.trkQualidade)).EndInit();
+            this.statusStrip1.ResumeLayout(false);
+            this.statusStrip1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -333,14 +406,22 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox txtAudioDelay;
         private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.TrackBar trkQualidade;
-        private System.Windows.Forms.Label lblQualidadeValor;
+        private System.Windows.Forms.Label labelQualidade;
+        private System.Windows.Forms.ComboBox cmbQualidade;
+        private System.Windows.Forms.Label labelFps;
+        private System.Windows.Forms.ComboBox cmbFps;
         private System.Windows.Forms.CheckBox chkMicrofone;
         private System.Windows.Forms.ComboBox cmbMicrofone;
         private System.Windows.Forms.CheckBox chkMostrarCursor;
         private System.Windows.Forms.TextBox txtPastaSaida;
         private System.Windows.Forms.Button btnPastaSaida;
         private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.StatusStrip statusStrip1;
+        private System.Windows.Forms.ToolStripStatusLabel tslTempo;
+        private System.Windows.Forms.ToolStripStatusLabel tslFps;
+        private System.Windows.Forms.ToolStripStatusLabel tslQualidade;
+        private System.Windows.Forms.ToolStripStatusLabel tslDiretorio;
+        private System.Windows.Forms.ToolStripStatusLabel tslAtalhos;
     }
 }
 
