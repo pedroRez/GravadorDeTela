@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Collections.Generic;
 using LoloRecorder.Services;
 using ScreenRecorderLib;
 
@@ -39,7 +40,10 @@ namespace LoloRecorder.Views
             base.OnSourceInitialized(e);
             _windowHandle = new WindowInteropHelper(this).Handle;
             _hwndSource = HwndSource.FromHwnd(_windowHandle);
-            _hwndSource.AddHook(HwndHook);
+            if (_hwndSource != null)
+            {
+                _hwndSource.AddHook(HwndHook);
+            }
             RegisterHotKey(_windowHandle, HOTKEY_START_PAUSE_ID, 0, (uint)KeyInterop.VirtualKeyFromKey(Key.F8));
             RegisterHotKey(_windowHandle, HOTKEY_STOP_ID, 0, (uint)KeyInterop.VirtualKeyFromKey(Key.F9));
         }
@@ -203,7 +207,7 @@ namespace LoloRecorder.Views
 
         private void WebcamToggle_Checked(object sender, RoutedEventArgs e)
         {
-            var devices = Recorder.GetSystemVideoCaptureDevices().ToList();
+            var devices = Recorder.GetSystemVideoCaptureDevices()?.ToList() ?? new List<RecordableCamera>();
             WebcamDevicesCombo.ItemsSource = devices;
             WebcamDevicesCombo.Visibility = Visibility.Visible;
             if (devices.Count > 0)
