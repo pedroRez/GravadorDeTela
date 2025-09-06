@@ -64,6 +64,14 @@
             <ComboBox x:Name="AudioDevicesCombo" Margin="0,5"/>
             <ToggleButton x:Name="WebcamToggle" Content="Webcam" Margin="0,5" Checked="WebcamToggle_Checked" Unchecked="WebcamToggle_Unchecked"/>
             <ComboBox x:Name="WebcamDevicesCombo" Margin="0,5" Visibility="Collapsed" DisplayMemberPath="FriendlyName" SelectedValuePath="DeviceName"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5">
+                <CheckBox x:Name="SplitCheck" Content="Dividir a cada (s):" Checked="SplitCheck_Checked" Unchecked="SplitCheck_Unchecked"/>
+                <TextBox x:Name="SplitSecondsBox" Width="60" Margin="5,0" IsEnabled="False"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5">
+                <CheckBox x:Name="StopCheck" Content="Parar após (min):" Checked="StopCheck_Checked" Unchecked="StopCheck_Unchecked"/>
+                <TextBox x:Name="StopMinutesBox" Width="60" Margin="5,0" IsEnabled="False"/>
+            </StackPanel>
             <Label x:Name="StatusLabel" Content="Parado" Foreground="{StaticResource Acento}" HorizontalAlignment="Center"/>
         </StackPanel>
     </Grid>

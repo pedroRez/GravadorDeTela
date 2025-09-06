@@ -2,7 +2,9 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using ScreenRecorderLib;
 
 namespace LoloRecorder.Services
@@ -18,6 +20,11 @@ namespace LoloRecorder.Services
         private readonly string _ffmpegPath;
         private Recorder? _recorder;
         private TaskCompletionSource<bool>? _recordingTcs;
+        private Timer? _splitTimer;
+        private CancellationTokenSource? _stopAfterCts;
+        private int _segmentIndex = 1;
+        private int _splitSeconds;
+        private string _currentOutputPath = string.Empty;
 
         /// <summary>
         /// Cria uma nova instância do serviço.
@@ -50,7 +57,7 @@ namespace LoloRecorder.Services
         /// <returns>
         /// Tupla indicando sucesso e mensagem de erro (quando houver).
         /// </returns>
-        public Task<(bool Success, string? ErrorMessage)> StartAsync(RecordingMode mode, string? webcamDevice = null)
+        public Task<(bool Success, string? ErrorMessage)> StartAsync(RecordingMode mode, string? webcamDevice = null, int? splitSeconds = null, int? stopAfterMinutes = null)
         {
             if (_recorder != null)
                 return Task.FromResult<(bool, string?)>((false, "Gravação já iniciada."));
@@ -101,12 +108,34 @@ namespace LoloRecorder.Services
                         break;
                 }
 
-                _recordingTcs = new TaskCompletionSource<bool>();
-                _recorder = Recorder.CreateRecorder(options);
-                _recorder.OnRecordingComplete += (s, e) => _recordingTcs?.TrySetResult(true);
+                _splitSeconds = splitSeconds ?? 0;
+                _segmentIndex = 1;
+                _currentOutputPath = _splitSeconds > 0 ? GetSegmentFilePath(_segmentIndex) : _outputPath;
 
-                // Gravar em arquivo temporário para permitir pós-processamento com ffmpeg
-                _recorder.Record(_outputPath + ".tmp");
+                StartRecorder(_currentOutputPath);
+
+                if (_splitSeconds > 0)
+                {
+                    _splitTimer = new Timer(_splitSeconds * 1000) { AutoReset = false };
+                    _splitTimer.Elapsed += async (s, e) => await SplitSegmentAsync();
+                    _splitTimer.Start();
+                }
+
+                if (stopAfterMinutes.HasValue && stopAfterMinutes.Value > 0)
+                {
+                    _stopAfterCts?.Cancel();
+                    _stopAfterCts = new CancellationTokenSource();
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await Task.Delay(TimeSpan.FromMinutes(stopAfterMinutes.Value), _stopAfterCts.Token);
+                            await StopAsync();
+                        }
+                        catch (TaskCanceledException) { }
+                    });
+                }
+
                 return Task.FromResult<(bool, string?)>((true, null));
             }
             catch (Exception ex)
@@ -122,9 +151,37 @@ namespace LoloRecorder.Services
         private static extern IntPtr GetForegroundWindow();
 
         /// <summary>
-        /// Interrompe a gravação e, se possível, utiliza ffmpeg para gerar o arquivo final.
+        /// Interrompe a gravação atual e finaliza timers auxiliares.
         /// </summary>
         public async Task StopAsync()
+        {
+            _splitTimer?.Stop();
+            _splitTimer = null;
+            _stopAfterCts?.Cancel();
+            _stopAfterCts = null;
+            await StopCurrentSegmentAsync();
+        }
+
+        private void StartRecorder(string path)
+        {
+            _recordingTcs = new TaskCompletionSource<bool>();
+            _recorder = Recorder.CreateRecorder(_options);
+            _recorder.OnRecordingComplete += (s, e) => _recordingTcs?.TrySetResult(true);
+            _recorder.Record(path + ".tmp");
+        }
+
+        private async Task SplitSegmentAsync()
+        {
+            if (_splitTimer != null)
+                _splitTimer.Stop();
+            await StopCurrentSegmentAsync();
+            _segmentIndex++;
+            _currentOutputPath = GetSegmentFilePath(_segmentIndex);
+            StartRecorder(_currentOutputPath);
+            _splitTimer?.Start();
+        }
+
+        private async Task StopCurrentSegmentAsync()
         {
             if (_recorder == null)
                 return;
@@ -135,29 +192,27 @@ namespace LoloRecorder.Services
                 if (_recordingTcs != null)
                     await _recordingTcs.Task.ConfigureAwait(false);
 
-                var tempFile = _outputPath + ".tmp";
+                var tempFile = _currentOutputPath + ".tmp";
                 if (File.Exists(tempFile))
                 {
-                    // Se o ffmpeg estiver disponível, usa-o para muxar/copiar
                     if (!string.IsNullOrWhiteSpace(_ffmpegPath) && (File.Exists(_ffmpegPath) || _ffmpegPath == "ffmpeg"))
                     {
                         var psi = new ProcessStartInfo
                         {
                             FileName = _ffmpegPath,
-                            Arguments = $"-y -i \"{tempFile}\" -c copy \"{_outputPath}\"",
+                            Arguments = $"-y -i \"{tempFile}\" -c copy \"{_currentOutputPath}\"",
                             RedirectStandardError = true,
                             RedirectStandardOutput = true,
                             UseShellExecute = false,
                             CreateNoWindow = true
                         };
-
                         using var proc = Process.Start(psi);
                         if (proc != null)
                             await proc.WaitForExitAsync().ConfigureAwait(false);
                     }
                     else
                     {
-                        File.Move(tempFile, _outputPath, true);
+                        File.Move(tempFile, _currentOutputPath, true);
                     }
 
                     if (File.Exists(tempFile))
@@ -174,6 +229,14 @@ namespace LoloRecorder.Services
                 _recorder = null;
                 _recordingTcs = null;
             }
+        }
+
+        private string GetSegmentFilePath(int index)
+        {
+            var dir = Path.GetDirectoryName(_outputPath) ?? string.Empty;
+            var name = Path.GetFileNameWithoutExtension(_outputPath);
+            var ext = Path.GetExtension(_outputPath);
+            return Path.Combine(dir, $"{name}_{index:000}{ext}");
         }
 
         public async ValueTask DisposeAsync()
