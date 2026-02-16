@@ -28,6 +28,17 @@ namespace GravadorDeTela
         private WinFormsTimer _segmentTimer;
         private int _segmentIndex;
         private bool _isStopping;
+        private bool _hotkeysRegistradas;
+
+        private const int HOTKEY_ID_INICIAR = 0x1001;
+        private const int HOTKEY_ID_PARAR = 0x1002;
+        private const int HOTKEY_ID_MOSTRAR = 0x1003;
+        private const uint MOD_CONTROL = 0x0002;
+        private const uint MOD_SHIFT = 0x0004;
+        private const uint VK_F8 = 0x77;
+        private const uint VK_F9 = 0x78;
+        private const uint VK_H = 0x48;
+        private const int WM_HOTKEY = 0x0312;
 
         // ===== Classe interna para popular o Combo =====
         private class AudioDeviceItem
@@ -40,6 +51,7 @@ namespace GravadorDeTela
         public Form1()
         {
             InitializeComponent();
+            KeyPreview = true;
 
             // Estado inicial UI
             btnParar.Enabled = false;
@@ -75,11 +87,85 @@ namespace GravadorDeTela
             // Carregar dispositivos de áudio dshow
             Shown += async (s, e) => await CarregarDispositivosAudio();
             FormClosing += Form1_FormClosing;
+
+            RegistrarAtalhosGlobais();
         }
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             CleanupRecordingResources(stopRecorder: true, disposeRecorder: true);
+            DesregistrarAtalhosGlobais();
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            if (m.Msg == WM_HOTKEY)
+            {
+                int id = m.WParam.ToInt32();
+                if (id == HOTKEY_ID_INICIAR && btnIniciar.Enabled)
+                {
+                    btnIniciar.PerformClick();
+                }
+                else if (id == HOTKEY_ID_PARAR && btnParar.Enabled)
+                {
+                    btnParar.PerformClick();
+                }
+                else if (id == HOTKEY_ID_MOSTRAR)
+                {
+                    MostrarJanela();
+                }
+            }
+
+            base.WndProc(ref m);
+        }
+
+        private void RegistrarAtalhosGlobais()
+        {
+            if (_hotkeysRegistradas)
+                return;
+
+            bool iniciarOk = RegisterHotKey(Handle, HOTKEY_ID_INICIAR, 0, VK_F8);
+            bool pararOk = RegisterHotKey(Handle, HOTKEY_ID_PARAR, 0, VK_F9);
+            bool mostrarOk = RegisterHotKey(Handle, HOTKEY_ID_MOSTRAR, MOD_CONTROL | MOD_SHIFT, VK_H);
+
+            _hotkeysRegistradas = iniciarOk && pararOk && mostrarOk;
+            if (!_hotkeysRegistradas)
+                Log("Falha ao registrar um ou mais atalhos globais (F8/F9/Ctrl+Shift+H).");
+        }
+
+        private void DesregistrarAtalhosGlobais()
+        {
+            if (!_hotkeysRegistradas)
+                return;
+
+            UnregisterHotKey(Handle, HOTKEY_ID_INICIAR);
+            UnregisterHotKey(Handle, HOTKEY_ID_PARAR);
+            UnregisterHotKey(Handle, HOTKEY_ID_MOSTRAR);
+            _hotkeysRegistradas = false;
+        }
+
+        private void OcultarJanelaDuranteGravacao()
+        {
+            if (!chkOcultarAoGravar.Checked)
+                return;
+
+            this.Hide();
+            ShowInTaskbar = false;
+        }
+
+        private void MostrarJanela()
+        {
+            ShowInTaskbar = true;
+            this.Show();
+            WindowState = FormWindowState.Normal;
+            this.BringToFront();
+            this.Activate();
         }
 
         private void trkQualidade_Scroll(object sender, EventArgs e)
@@ -124,6 +210,7 @@ namespace GravadorDeTela
         private void FinalizarUI()
         {
             this.Cursor = Cursors.Default;
+            MostrarJanela();
             btnIniciar.Enabled = true;
             btnParar.Enabled = false;
             progressBar1.Visible = false;
@@ -136,6 +223,7 @@ namespace GravadorDeTela
             chkStop.Enabled = true;
             txtStop.Enabled = chkStop.Checked;
             txtAudioDelay.Enabled = true;
+            chkOcultarAoGravar.Enabled = true;
         }
 
         private void CleanupRecordingResources(bool stopRecorder, bool disposeRecorder)
@@ -647,10 +735,12 @@ namespace GravadorDeTela
                 txtStop.Enabled = false;
                 txtSegmentacao.Enabled = false;
                 txtAudioDelay.Enabled = false;
+                chkOcultarAoGravar.Enabled = false;
 
                 // A gravação já foi iniciada; mantém o cursor normal para não parecer "travado".
                 this.Cursor = Cursors.Default;
                 AtualizaStatus("Gravando...", marquee: false);
+                OcultarJanelaDuranteGravacao();
             }
             catch (Exception ex)
             {
