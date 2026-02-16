@@ -586,8 +586,10 @@ namespace GravadorDeTela
                 txtStop.Enabled = false;
                 txtSegmentacao.Enabled = false;
                 txtAudioDelay.Enabled = false;
-                this.Cursor = Cursors.WaitCursor;
-                AtualizaStatus("Iniciando gravação...");
+
+                // A gravação já foi iniciada; mantém o cursor normal para não parecer "travado".
+                this.Cursor = Cursors.Default;
+                AtualizaStatus("Gravando...", marquee: false);
             }
             catch (Exception ex)
             {
